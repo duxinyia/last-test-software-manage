@@ -13,18 +13,8 @@ export const NextLoading = {
 		const div = <HTMLElement>document.createElement('div');
 		div.setAttribute('class', 'loading-next');
 		const htmls = `
-			<div class="loading-next-box">
-				<div class="loading-next-box-warp">
-					<div class="loading-next-box-item"></div>
-					<div class="loading-next-box-item"></div>
-					<div class="loading-next-box-item"></div>
-					<div class="loading-next-box-item"></div>
-					<div class="loading-next-box-item"></div>
-					<div class="loading-next-box-item"></div>
-					<div class="loading-next-box-item"></div>
-					<div class="loading-next-box-item"></div>
-					<div class="loading-next-box-item"></div>
-				</div>
+			<div class="boxLoading">
+			
 			</div>
 		`;
 		div.innerHTML = htmls;

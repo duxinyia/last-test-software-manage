@@ -4,7 +4,10 @@
 ------------------------------- */
 @media screen and (max-width: $lg) and (min-width: $xs) {
 	.main-login{
-		background-color: #2c9ff5;
+		.fly{
+			display: none;
+		}
+		background-color: #004ac3;
 		.login-container {
 			display: none;
 		}
@@ -13,6 +16,9 @@
 		}
 		.login-content-submit{
 			margin-top: 17px!important;
+		}
+		.login-right-warp-main-title {
+			margin-left: -264px!important;
 		}
 	}
 
@@ -23,15 +29,23 @@
 @media screen and (max-width: $xs) {
 	.main-login{
 		background-color: var(--next-color-white)	;
+		.fly{
+			display: none;
+		}
 		.login-top{
 			display: none;
 		}
 		.login-container {
 			display: none;
 		}
+		.login-right-warp-main-title {
+			font-size: 40px!important;
+			color: #0047c5!important;
+			margin-left: -192px!important;
+		}
 		.login-bottom {
 			left: 50%!important;
-			top: 25%!important;
+			top: 46%!important;
 			width: 100% !important;
 			.login-right-warp {
 				height: 100%;
@@ -42,9 +56,7 @@
 					.el-form-item {
 						display: flex !important;
 					}
-					.login-right-warp-main-title {
-						font-size: 25px !important;
-					}
+					
 				}
 				.login-right-warp-one {
 					&::after {
@@ -65,15 +77,16 @@
 /* 页面宽度小于375px
 ------------------------------- */
 @media screen and (max-width: $us) {
-	.login-container {
-		.login-bottom {
-			.login-right-warp {
-				.login-right-warp-mian {
-					.login-right-warp-main-title {
-						font-size: 18px !important;
-					}
-				}
-			}
+	.main-login{
+		.fly{
+			display: none;
 		}
 	}
+	.main-login{
+		.login-right-warp-main-title {
+			font-size: 25px !important;
+			margin-left: -110px!important;
+		}
+	}
+
 }

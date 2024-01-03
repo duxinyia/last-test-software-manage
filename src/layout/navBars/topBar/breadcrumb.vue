@@ -74,33 +74,34 @@ const setLocalThemeConfig = () => {
 };
 // 处理面包屑数据
 const getBreadcrumbList = (arr: RouteItems) => {
-	state.breadcrumbList.unshift({ path: '/', meta: { title: 'message.router.mainHead' } });
 	arr.forEach((item: RouteItem) => {
 		state.routeSplit.forEach((v: string, k: number, arrs: string[]) => {
-			if (state.routeSplitFirst === item.path && item.path != '/home') {
-				state.breadcrumbList.shift();
+			if (state.routeSplitFirst === item.path) {
 				state.routeSplitFirst += `/${arrs[state.routeSplitIndex]}`;
 				state.breadcrumbList.push(item);
 				state.routeSplitIndex++;
 				if (item.children) getBreadcrumbList(item.children);
-			} else if (item.path == '/home') {
-				// state.breadcrumbList.shift();
 			}
 		});
 	});
+	// console.log(state.breadcrumbList);
 };
 // 当前路由字符串切割成数组，并删除第一项空内容
 const initRouteSplit = (path: string) => {
 	if (!themeConfig.value.isBreadcrumb) return false;
-	state.breadcrumbList = [routesList.value[0]];
-	state.routeSplit = path.split('/');
-	state.routeSplit.shift();
-	state.routeSplitFirst = `/${state.routeSplit[0]}`;
-	state.routeSplitIndex = 1;
-	getBreadcrumbList(routesList.value);
-	if (route.name === 'system' || (route.name === 'notFound' && state.breadcrumbList.length > 1)) state.breadcrumbList.shift();
-	if (state.breadcrumbList.length > 0)
-		state.breadcrumbList[state.breadcrumbList.length - 1].meta.tagsViewName = other.setTagsViewNameI18n(<RouteToFrom>route);
+	if (routesList.value) {
+		state.breadcrumbList = [routesList.value[0]];
+		state.routeSplit = path.split('/');
+		state.routeSplit.shift();
+		state.routeSplitFirst = `/${state.routeSplit[0]}`;
+		state.routeSplitIndex = 1;
+		state.breadcrumbList.unshift({ path: '/', meta: { title: 'message.router.mainHead' } });
+		getBreadcrumbList(routesList.value);
+		if (route.name === 'home' || (route.name === 'notFound' && state.breadcrumbList.length > 1)) state.breadcrumbList.splice(1, 1);
+		if (state.breadcrumbList.length > 0)
+			state.breadcrumbList[state.breadcrumbList.length - 1].meta.tagsViewName = other.setTagsViewNameI18n(<RouteToFrom>route);
+		state.breadcrumbList.splice(1, 1);
+	}
 };
 // 页面加载时
 onMounted(() => {

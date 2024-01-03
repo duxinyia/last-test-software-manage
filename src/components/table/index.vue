@@ -2,29 +2,32 @@
 	<div class="table-container">
 		<div class="table-top" v-if="config.isButton || config.isInlineEditing || config.isTopTool">
 			<!-- 新增弹窗按钮以及批量删除按钮 -->
-			<div class="allBtn mt20" v-for="topbtn in topBtnConfig" key="topbtn.name">
+			<div v-if="config.isButton" class="allBtn mt20" v-for="topbtn in topBtnConfig" key="topbtn.name">
 				<el-button
 					v-if="topbtn.type === 'add'"
 					size="default"
-					class="ml10 buttonBorder"
+					class="ml10"
 					@click="onOpenAdd('add')"
 					:color="topbtn.color"
 					:type="topbtn.defaultColor"
 					plain
-					><el-icon><ele-Plus /></el-icon>{{ $t('message.allButton.addBtn') }}</el-button
+					><el-icon class="mr5"><ele-Plus /></el-icon>{{ $t(topbtn.name) }}</el-button
 				>
 				<el-popconfirm v-else-if="topbtn.type === 'bulkDel'" :title="$t('確定刪除選中項嗎？')" @confirm="onBulkDeletion">
 					<template #reference>
-						<el-button size="default" :disabled="state.selectlist.length <= 0" class="ml10 buttonBorder" color="#D33939" plain
+						<el-button size="default" :disabled="state.selectlist.length <= 0" class="ml10" color="#D33939" plain
 							><el-icon><ele-Delete /></el-icon>{{ $t('message.allButton.bulkDeletionBtn') }}</el-button
 						>
 					</template>
 				</el-popconfirm>
+				<el-button v-else-if="topbtn.type === 'export'" @click="onExportTable" size="default" class="" type="primary" plain>{{
+					$t('message.tooltip.export')
+				}}</el-button>
 				<el-button
 					@click="onOpentopBtnOther"
 					v-else
 					size="default"
-					class="ml10 buttonBorder"
+					class="ml10"
 					:color="topbtn.color"
 					plain
 					:type="topbtn.defaultColor"
@@ -33,16 +36,19 @@
 				>
 			</div>
 			<div class="add-row" v-if="config.isInlineEditing && config.isAddRowBtn">
-				<el-button size="default" class="buttonBorder" @click="onAddRow" type="primary" plain
-					><el-icon><ele-Plus /></el-icon>{{ $t('message.allButton.addBtn') }}</el-button
+				<el-button size="default" class="" @click="onAddRow" type="primary" plain
+					><el-icon class="mr5"><ele-Plus /></el-icon>{{ $t('message.allButton.addBtn') }}</el-button
 				>
 			</div>
 			<div class="table-top-tool" v-if="config.isTopTool">
 				<!-- <SvgIcon name="iconfont icon-dayinji" :size="19" title="打印" @click="onPrintTable" /> -->
 				<!-- <SvgIcon name="iconfont icon-btn-daoru" :size="22" :title="$t('message.tooltip.import')" @click="onImportTable('imp')" /> -->
-				<el-icon v-if="config.exportIcon" name="iconfont icon-btn-daochu" :size="22" :title="$t('message.tooltip.export')" @click="onExportTable"
+				<el-button @click="onExportTable" v-if="config.exportIcon" size="default" class="" type="primary" plain>{{
+					$t('message.tooltip.export')
+				}}</el-button>
+				<!-- <el-icon v-if="config.exportIcon" name="iconfont icon-btn-daochu" :size="22" :title="$t('message.tooltip.export')" @click="onExportTable"
 					><ele-Upload
-				/></el-icon>
+				/></el-icon> -->
 				<!-- <SvgIcon v-if="config.exportIcon" name="iconfont icon-btn-daochu" :size="22" :title="$t('message.tooltip.export')" @click="onExportTable" /> -->
 				<!-- <SvgIcon name="iconfont icon-refresh-line" :size="23" :title="$t('message.tooltip.refresh')" @click="onRefreshTable" /> -->
 				<el-icon name="iconfont icon-refresh-line" :size="22" :title="$t('message.tooltip.refresh')" @click="onRefreshTable"><ele-Refresh /></el-icon>
@@ -120,7 +126,9 @@
 					<span v-if="item.isRequired" class="color-danger">*</span>
 					<span class="pl5">{{ $t(item.title) }}</span>
 				</template>
+
 				<template v-slot="scope">
+					<slot v-if="item.type === 'slot'" name="slotCol" :row="scope.row"></slot>
 					<el-form-item
 						v-if="config.isInlineEditing"
 						:prop="`data.${scope.$index}.${item.key}`"
@@ -268,6 +276,10 @@
 							fit="cover"
 						/>
 					</template>
+					<!-- 鏈接 -->
+					<span v-if="item.type === 'link'">
+						<a target="_blank" href="" @click="clickLink(data[scope.$index][item.key + 'Link'])">{{ scope.row[item.key] }}</a>
+					</span>
 					<span v-if="!config.isInlineEditing && item.type === 'text'" style="text-align: center; width: 100%">
 						{{ scope.row[item.key] }}
 					</span>
@@ -296,23 +308,27 @@
 					<slot name="btn" :row="scope.row"></slot>
 					<template v-for="btn in btnConfig" :key="btn.type">
 						<el-button
-							v-if="!btn.isSure"
+							:disabled="scope.row[btn.type + 'Disabled']"
+							v-if="!btn.isSure && !scope.row[btn.type + 'IsShow']"
 							@click="btn.type === 'edit' ? onOpenEdit(btn.type, scope.row) : onOpenOther(scope, btn.type)"
 							:color="btn.color"
-							plain
-							size="default"
-							class="button buttonBorder"
+							size="small"
+							:type="btn.defaultColor"
+							class="button"
 						>
 							<SvgIcon class="mr5" :name="btn.icon" />
 							{{ $t(btn.name) }}</el-button
 						>
-						<el-popconfirm v-if="btn.type === 'del'" :title="$t('message.hint.suredel')" @confirm="onDelRow(scope.row, scope.$index)">
-							<template #reference>
-								<el-button :disabled="btn.disabled" class="button buttonBorder" :color="btn.color" plain size="default"
-									><el-icon class="mr5"><ele-Delete /></el-icon>{{ $t(btn.name) }}</el-button
-								>
-							</template>
-						</el-popconfirm>
+						<el-button
+							v-if="btn.type === 'del'"
+							:disabled="scope.row.delDisabled"
+							class="button"
+							@click="onDelRow(scope.row, scope.$index)"
+							:color="btn.color"
+							:type="btn.defaultColor"
+							size="small"
+							><el-icon class="mr5"><ele-Delete /></el-icon>{{ $t(btn.name) }}</el-button
+						>
 					</template>
 				</template>
 			</el-table-column>
@@ -342,7 +358,7 @@
 <script setup lang="ts" name="netxTable">
 import { reactive, computed, nextTick, ref, defineAsyncComponent, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import { ElMessage } from 'element-plus';
+import { ElMessage, ElMessageBox } from 'element-plus';
 import printJs from 'print-js';
 import Sortable from 'sortablejs';
 import { storeToRefs } from 'pinia';
@@ -556,10 +572,23 @@ const onSelectionChange = (val: EmptyObjectType[]) => {
 const cellClick = (row: Object, column: Object) => {
 	emit('cellclick', row, column);
 };
-
+// 點擊鏈接
+const clickLink = (data: string) => {
+	window.open(data);
+};
 // 删除当前项
 const onDelRow = (row: EmptyObjectType, index?: number) => {
-	emit('delRow', row, index, 'delRow');
+	ElMessageBox.confirm('確定刪除嗎?', '提示', {
+		confirmButtonText: '確 定',
+		cancelButtonText: '取 消',
+		type: 'warning',
+		draggable: true,
+		closeOnClickModal: false,
+	})
+		.then(async () => {
+			emit('delRow', row, index, 'delRow');
+		})
+		.catch(() => {});
 };
 // 批量删除
 const onBulkDeletion = () => {
@@ -708,9 +737,6 @@ defineExpose({
 		// width: 80px;
 		height: 32px;
 	}
-	.buttonBorder {
-		border: 0px !important;
-	}
 
 	.footer {
 		display: flex;
@@ -722,8 +748,8 @@ defineExpose({
 		justify-content: flex-end;
 	}
 	:deep(.el-table th.el-table__cell) {
-		background-color: #dce9fd;
-		color: var(--el-color-primary);
+		background-color: var(--el-color-primary-light-9);
+		color: var(--el-text-color-primary);
 	}
 }
 :deep(.disabled-row) {

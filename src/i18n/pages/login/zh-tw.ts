@@ -11,7 +11,7 @@ export default {
 	account: {
 		accountPlaceholder1: '請輸入工號',
 		accountPlaceholder2: '請輸入密碼',
-		accountBtnText: '登 錄',
+		accountBtnText: '登錄',
 		remember:'記住密碼',
 		forget:'忘記密碼',
 		login:'登錄中',

@@ -2,7 +2,7 @@
 export default {
 	router: {
 		home: 'home page',
-		mainHead: 'tool system',
+		mainHead: 'Rayprus test software system',
 		basics: 'basic information',
 		basicsPurchase: 'purchasing group',
 		basicsObject: 'project group',

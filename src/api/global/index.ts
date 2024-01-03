@@ -1,7 +1,7 @@
 import request from '/@/utils/request';
 
 // 上传文件
-export function getUploadFileApi(funcType:number,file:any) {
+export function getUploadFileApi(FileType:number,file:any) {
   return request({
     url: '/api/File/UploadFile',
     method: 'POST',
@@ -9,7 +9,7 @@ export function getUploadFileApi(funcType:number,file:any) {
       "Content-Type": "multipart/form-data",
   },
     params:{
-      funcType
+      FileType
     },
     data:{
       file

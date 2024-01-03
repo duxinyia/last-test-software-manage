@@ -28,7 +28,7 @@
 git clone
 
 # 进入项目
-cd tool-manage
+cd test-software-manage
 
 # 安装依赖
 cnpm install

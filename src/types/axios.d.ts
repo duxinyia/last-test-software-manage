@@ -12,6 +12,7 @@ declare module 'axios' {
 		[key: string]: T;
 	}
 }
+// window的（線上環境要配置api）
  export declare global {
   interface Window {
     webConfig: any;

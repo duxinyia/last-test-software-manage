@@ -2,7 +2,7 @@
 export default {
 	router: {
 		home: '首页',
-		mainHead: '治工具系统',
+		mainHead: 'Rayprus测试软件系统',
 		basics: '基本资料维护',
 		basicsPurchase: '采购群组',
 		basicsObject: '工程群组',

@@ -7,7 +7,7 @@ import viteCompression from 'vite-plugin-compression';
 import { buildConfig } from './src/utils/build';
 // 引入svg-icons
 import { createSvgIconsPlugin } from 'vite-plugin-svg-icons'
-
+import { viteMockServe } from 'vite-plugin-mock'
 const pathResolve = (dir: string) => {
 	return resolve(__dirname, '.', dir);
 };
@@ -26,7 +26,18 @@ const viteConfig = defineConfig((mode: ConfigEnv) => {
 				iconDirs: [path.resolve(process.cwd(), 'src/assets')],
         // 指定symbolId格式
         symbolId: 'icon-[dir]-[name]',
-			})],
+			}),
+			viteMockServe({
+        mockPath: 'mock',
+        localEnabled: mode.command === 'serve',
+        prodEnabled: mode.command !== 'serve' && true,
+        // 这样可以控制关闭mock的时候不让mock打包到最终代码内
+        injectCode: `
+          import { setupProdMockServer } from '../mock/index';
+          setupProdMockServer();
+        `
+      })
+		],
       
 		root: process.cwd(),
 		resolve: { alias },
@@ -70,7 +81,10 @@ const viteConfig = defineConfig((mode: ConfigEnv) => {
 			__INTLIFY_PROD_DEVTOOLS__: JSON.stringify(false),
 			__NEXT_VERSION__: JSON.stringify(process.env.npm_package_version),
 			__NEXT_NAME__: JSON.stringify(process.env.npm_package_name),
+			
 		},
+		
 	};
+
 });
 export default viteConfig;

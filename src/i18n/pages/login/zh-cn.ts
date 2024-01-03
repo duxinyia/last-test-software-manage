@@ -11,7 +11,7 @@ export default {
 	account: {
 		accountPlaceholder1: '请输入工号',
 		accountPlaceholder2: '请输入密码',
-		accountBtnText: '登 录',
+		accountBtnText: '登录',
 		remember:'记住密码',
 		forget:'忘记密码',
 		login:'登录中',

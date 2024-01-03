@@ -1,6 +1,7 @@
 <template>
 	<div class="table-search-container" v-if="props.search.length > 0">
 		<!-- label-width="auto" -->
+
 		<el-form :label-width="labelWidth" ref="tableSearchRef" :model="state.form" size="default" class="table-form">
 			<el-row>
 				<el-col
@@ -93,7 +94,7 @@
 						</template>
 						<div>
 							<el-button v-if="searchConfig.isSearchBtn" size="default" type="primary" @click="onSearch(tableSearchRef)"
-								><el-icon> <ele-Search /> </el-icon>{{ $t('message.allButton.searchBtn') }}
+								><el-icon class="mr5"> <ele-Search /> </el-icon>{{ $t('message.allButton.searchBtn') }}
 							</el-button>
 							<!-- <el-button size="default" type="info" class="ml10" @click="onReset(tableSearchRef)"
 								><el-icon><ele-RefreshLeft /></el-icon> {{ $t('message.allButton.resetBtn') }}
@@ -172,16 +173,22 @@ const initFormField = () => {
 		if (v.type === 'select' && v.options && v.options?.length > 0) {
 			v.options?.forEach((item) => {
 				if (item.selected) {
-					state.form[v.prop] = item.text;
+					state.form[v.prop] = item.value;
 				}
 			});
-			emit('search', state.form);
+			// emit('search', state.form);
+		} else {
+			// state.form[v.prop] = '';
 		}
 	});
 };
 // 页面加载时
 onMounted(() => {
 	initFormField();
+});
+// 暴露变量
+defineExpose({
+	initFormField,
 });
 </script>
 

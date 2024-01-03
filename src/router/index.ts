@@ -39,6 +39,7 @@ export const router = createRouter({
 	 *    防止 404、401 不在 layout 布局中，不设置的话，404、401 界面将全屏显示
 	 */
 	routes: [...notFoundAndNoPower, ...staticRoutes],
+	
 });
 
 /**
@@ -68,7 +69,7 @@ export function formatTwoStageRoutes(arr: any) {
 	const newArr: any = [];
 	const cacheList: Array<string> = [];
 	arr.forEach((v: any) => {
-		if (v.path === '/'&&v.redirect==='/home') {		
+		if (v.path === '/') {		
 			newArr.push({ component: v.component, name: v.name, path: v.path, redirect: v.redirect, meta: v.meta, children: [] });
 		} else {
 			// 判断是否是动态路由（xx/:id/:name），用于 tagsView 等中使用
@@ -99,7 +100,8 @@ router.beforeEach(async (to, from, next) => {
 		next();
 		//start进度条开始， done进度条加载结束
 		NProgress.done();
-	} else if(!token&&to.path.includes('/link')||token&&to.path.includes('/link')){	
+	}
+	 else if(!token&&to.path.includes('/link')||token&&to.path.includes('/link')){	
 		next();	
 		NProgress.done();
 	}
@@ -110,14 +112,14 @@ router.beforeEach(async (to, from, next) => {
 			Local.clear()
 			NProgress.done();
 		} else if (token &&( to.path === '/login'||to.path === '/')) {
-			next('/home');	
+			next('/projectConfiguration/projectManage');	
 			NProgress.done();
 		} 
 		else {
 			const storesRoutesList = useRoutesList(pinia);
 			const { routesList } = storeToRefs(storesRoutesList);		
-			if (routesList.value.length === 0) {
-				if (isRequestRoutes) {		
+			if (routesList.value?.length === 0) {
+				if (isRequestRoutes) {	
 					// 后端控制路由：路由数据初始化，防止刷新时丢失
 					await initBackEndControlRoutes();		
 					// 解决刷新时，一直跳 404 页面问题，关联问题 No match found for location with path 'xxx'

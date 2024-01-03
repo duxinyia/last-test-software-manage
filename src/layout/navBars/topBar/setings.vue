@@ -437,12 +437,19 @@ import { storeToRefs } from 'pinia';
 import { useThemeConfig } from '/@/stores/themeConfig';
 import { useChangeColor } from '/@/utils/theme';
 import { verifyAndSpace } from '/@/utils/toolsValidate';
-import { Local } from '/@/utils/storage';
+import { Local, Session } from '/@/utils/storage';
 import Watermark from '/@/utils/watermark';
 import commonFunction from '/@/utils/commonFunction';
 import other from '/@/utils/other';
 import mittBus from '/@/utils/mitt';
-
+import { useLoginApi } from '/@/api/login';
+import { initBackEndControlRoutes } from '/@/router/backEnd';
+import { useRoutesList } from '/@/stores/routesList';
+const stores = useRoutesList();
+import { useRoute, useRouter } from 'vue-router';
+import pinia from '/@/stores';
+const route = useRoute();
+const router = useRouter();
 // 定义变量内容
 const { locale } = useI18n();
 const storesThemeConfig = useThemeConfig();
@@ -645,8 +652,32 @@ const initSetStyle = () => {
 	// 2、菜单 / 顶栏 --> 分栏菜单背景渐变
 	onColumnsMenuBarGradualChange();
 };
+const addIsKeepAlive = (datas: EmptyArrayType) => {
+	datas.forEach((item) => {
+		item.meta['isKeepAlive'] = true;
+		item.children &&
+			item.children.forEach((c: any) => {
+				let reg = new RegExp('/', 'g');
+				c.name = c.name.replace(reg, '');
+			});
+		// 菜单是否隐藏
+		item.meta['isHide'] = Boolean(item.hidden);
+		if (item.children) {
+			addIsKeepAlive(item.children);
+		}
+	});
+	return datas;
+};
 onMounted(() => {
-	nextTick(() => {
+	nextTick(async () => {
+		// if (!Local.get('data') && Session.get('token')) {
+		// 	const userInfo = Session.get('userInfo');
+		// 	const res = await useLoginApi(userInfo.userId, userInfo.userPassword);
+		// 	const menudatas = addIsKeepAlive(res.data.datas);
+		// 	Local.set('datas', menudatas);
+		// 	const storesRoutesList = useRoutesList(pinia);
+		// 	storesRoutesList.setRoutesList(menudatas as any);
+		// }
 		// 判断当前布局是否不相同，不相同则初始化当前布局的样式，防止监听窗口大小改变时，布局配置logo、菜单背景等部分布局失效问题
 		if (!Local.get('frequency')) initLayoutChangeFun();
 		Local.set('frequency', 1);
@@ -670,6 +701,7 @@ onMounted(() => {
 			onWartermarkChange();
 			// 语言国际化
 			if (Local.get('themeConfig')) locale.value = Local.get('themeConfig').globalI18n;
+
 			// 初始化菜单样式等
 			initSetStyle();
 		}, 100);

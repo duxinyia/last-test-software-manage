@@ -1,9 +1,10 @@
 <template>
+	<div class="title">用戶登錄</div>
 	<el-form ref="ruleFormRef" size="large" class="login-content-form" :model="state.ruleForm">
 		<el-form-item class="login-animation1" prop="userName" :rules="[{ required: true, message: $t('message.account.worknoEmpty') }]">
 			<el-input text :placeholder="$t('message.account.accountPlaceholder1')" v-model="state.ruleForm.userName" clearable autocomplete="off">
 				<template #prefix>
-					<el-icon class="el-input__icon" :size="20"><ele-User /></el-icon>
+					<el-icon class="el-input__icon" color="#9EACF2" :size="20"><ele-Avatar /></el-icon>
 				</template>
 			</el-input>
 		</el-form-item>
@@ -15,7 +16,8 @@
 				autocomplete="off"
 			>
 				<template #prefix>
-					<el-icon class="el-input__icon" :size="20"><ele-Unlock /></el-icon>
+					<SvgIcon class="svgIcon" :size="13" color="#9EACF2" :name="'icon-Unlock'" />
+					<!-- <el-icon class="el-input__icon" :size="20"><ele-Unlock /></el-icon> -->
 				</template>
 				<template #suffix>
 					<el-icon @click="state.isShowPassword = !state.isShowPassword" class="login-content-password">
@@ -42,7 +44,6 @@
 			<el-button
 				type="primary"
 				class="login-content-submit"
-				round
 				v-waves
 				@keyup.enter.native="enterdown"
 				@click="onSignIn(ruleFormRef)"
@@ -70,6 +71,7 @@ import { NextLoading } from '/@/utils/loading';
 import { useLoginApi, useLogin } from '/@/api/login/index';
 import { encryptData, decryptData } from '/@/utils/aes';
 import JSEncrypt from 'jsencrypt'; //引入模块
+import { log } from 'util';
 // 定义变量内容
 const { t } = useI18n();
 const storesThemeConfig = useThemeConfig();
@@ -114,21 +116,23 @@ const onSignIn = (formEl: EmptyObjectType | undefined) => {
 			// 存储 token 到浏览器缓存
 			if (res.status) {
 				Session.set('token', res.data.token);
+				Cookies.set('userPassword', datapw);
 				Cookies.set('userName', res.data.userName);
 				Cookies.set('userId', res.data.userId);
 				// Local.set('datas', res.data.datas);
 				// let home: string[] = [];
-				res.data.datas.unshift({
-					alwaysShow: 'true',
-					path: '/home',
-					name: 'home',
-					component: 'home',
-					redirect: 'noRedirect',
-					meta: { title: '首页', titleEn: 'message.router.home', isAffix: true, icon: 'home' },
-				});
+				// res.data.datas.unshift({
+				// 	alwaysShow: 'true',
+				// 	path: '/home',
+				// 	name: 'home',
+				// 	component: 'home',
+				// 	redirect: 'noRedirect',
+				// 	meta: { title: '專案配置', titleEn: '專案配置', isAffix: true, icon: 'home' },
+				// });
 
 				// 添加是否缓存组件状态
 				const menudatas = addIsKeepAlive(res.data.datas);
+
 				Local.set('datas', menudatas);
 				// router.push('/home');
 				if (!themeConfig.value.isRequestRoutes) {
@@ -138,6 +142,7 @@ const onSignIn = (formEl: EmptyObjectType | undefined) => {
 					// 模拟后端控制路由，isRequestRoutes 为 true，则开启后端控制路由
 					// 添加完动态路由，再进行 router 跳转，否则可能报错 No match found for location with path "/"（目前走的这个）
 					const isNoPower = await initBackEndControlRoutes();
+
 					// 执行完 initBackEndControlRoutes，再执行 signInSuccess
 					signInSuccess(isNoPower);
 				}
@@ -184,7 +189,7 @@ const signInSuccess = (isNoPower: boolean | undefined) => {
 				query: Object.keys(<string>route.query?.params).length > 0 ? JSON.parse(<string>route.query?.params) : '',
 			});
 		} else {
-			router.push('/home');
+			// router.push('/basics/purchase');
 		}
 		// 登录成功提示
 		const signInText = t('message.signInText');
@@ -212,6 +217,16 @@ onUnmounted(() => {
 <style scoped lang="scss">
 :deep(.is-loading) {
 	font-size: 24px !important;
+}
+.title {
+	color: #0047c5;
+	font-size: 30px;
+	font-family: Microsoft YaHei;
+	margin: 73px 0px 39px 0px;
+	text-align: center;
+}
+.login-animation1 {
+	margin-bottom: 28px;
 }
 .login-content-form {
 	margin-top: 20px;
@@ -244,11 +259,10 @@ onUnmounted(() => {
 		letter-spacing: 23px;
 		font-weight: 600;
 		margin-top: 15px;
-		height: 67px;
-		margin-top: 43px;
-		background: linear-gradient(170deg, #2d6dcd, #33a1ff, #33cbff);
+		height: 50px;
+		background: #6077ef;
+		// background: linear-gradient(170deg, #2d6dcd, #33a1ff, #33cbff);
 		box-shadow: 0px 3px 7px 0px rgba(16, 92, 138, 0.35);
-		border-radius: 34px;
 		border: 0px;
 		span {
 			width: 100%;
@@ -257,15 +271,14 @@ onUnmounted(() => {
 		}
 	}
 	.pwd-container {
-		margin-top: -14px;
 		width: 100%;
-		padding: 0 20px;
+		padding: 10px 20px 0px;
 		.forpwd {
 			float: right;
 			cursor: pointer;
 			font-size: 14px;
 			&:hover {
-				color: #409eff;
+				color: #324bca;
 			}
 		}
 	}
@@ -273,13 +286,13 @@ onUnmounted(() => {
 		font-size: 16px;
 	}
 	:deep(.el-input__wrapper) {
-		border-top: 0px;
-		border-right: 0px;
-		border-left: 0px;
-		border-bottom: 1px solid #ccc;
-		border-radius: 0px;
+		// border-top: 0px;
+		// border-right: 0px;
+		// border-left: 0px;
+		border: 1px solid #95a4ef;
+		border-radius: 5px;
 		box-shadow: 0 0 0 0px;
-		height: 93px;
+		// height: 93px;
 	}
 	:deep(.el-input__inner) {
 		margin-left: 20px;

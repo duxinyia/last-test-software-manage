@@ -80,7 +80,13 @@ export function setFilterRouteEnd() {
 	let filterRouteEnd: any = formatTwoStageRoutes(formatFlatteningRoutes(dynamicRoutes));
 	// notFoundAndNoPower 防止 404、401 不在 layout 布局中，不设置的话，404、401 界面将全屏显示
 	// 关联问题 No match found for location with path 'xxx'
-	filterRouteEnd[0].children = [...filterRouteEnd[0].children, ...notFoundAndNoPower];
+	const arr:EmptyArrayType=[]
+	filterRouteEnd[0].children.forEach((item:any)=>{
+	if(item.component!=="nofound"){
+		arr.push(item)
+	}
+	})
+	filterRouteEnd[0].children = [...arr, ...notFoundAndNoPower];
 	return filterRouteEnd;
 }
 
@@ -131,13 +137,15 @@ export function dynamicImport(dynamicViewsModules: Record<string, Function>, com
 		const k = key.replace(/..\/views|../, '');
 		return k.startsWith(`${component}`) || k.startsWith(`/${component}`);
 	});
-	if (matchKeys?.length >= 1) {
+	if (matchKeys?.length === 1) {
 		// 拿到菜单路径
 		let matchKeysIndex = (matchKeys || []).findIndex((item) => item.includes('index'));
 		const matchKey = matchKeys[matchKeysIndex];
 		return dynamicViewsModules[matchKey];
 	}
-	if (matchKeys?.length < 1) {
+	if (matchKeys?.length > 1) {
 		return false;
+	}else if(matchKeys?.length < 1){
+		return 'nofound'
 	}
 }

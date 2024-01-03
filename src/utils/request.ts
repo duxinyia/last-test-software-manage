@@ -1,6 +1,7 @@
 import axios, { AxiosInstance } from 'axios';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Session,Local } from '/@/utils/storage';
+// 主要用于将url后面的值转换为对象，或者将对象拼接未url后面的值
 import qs from 'qs';
 
 // 配置新建一个 axios 实例

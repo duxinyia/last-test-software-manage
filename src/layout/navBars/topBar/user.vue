@@ -12,6 +12,10 @@
 				</el-dropdown-menu>
 			</template>
 		</el-dropdown> -->
+		<!-- <div class="layout-navbars-breadcrumb-user-icon" @click="onAddDarkChange" title="主題切換">
+			<el-icon :size="17" v-if="themeConfig.isIsDark"><ele-Moon /></el-icon>
+			<el-icon :size="17" v-else><ele-Sunny /></el-icon>
+		</div> -->
 		<div class="layout-navbars-breadcrumb-user-icon" @click="onSearchClick">
 			<el-icon :size="17" :title="$t('message.user.title2')"><ele-Search /></el-icon>
 			<!-- <i class="iconfont icon-chaxun" :title="$t('message.user.title2')"></i> -->
@@ -67,9 +71,10 @@
 		<div class="layout-navbars-breadcrumb-user-icon mr10">
 			<span class="layout-navbars-breadcrumb-user-link">{{ currentTime }}</span>
 		</div>
+
 		<el-dropdown :show-timeout="70" :hide-timeout="50" @command="onHandleCommandClick">
 			<span class="layout-navbars-breadcrumb-user-link">
-				{{ userInfos.userName === '' ? 'admin' : userInfos.userId + ' ' + userInfos.userName }}
+				{{ Cookies.get('userName') === '' ? 'admin' : Cookies.get('userId') + ' ' + Cookies.get('userName') }}
 				<el-icon class="userH"><ele-UserFilled /></el-icon>
 				<!-- <i class="iconfont icon-user-s userH"></i> -->
 				<!-- <el-icon class="el-icon--right">
@@ -78,10 +83,10 @@
 			</span>
 			<template #dropdown>
 				<el-dropdown-menu>
-					<el-dropdown-item command="/home">{{ $t('message.user.dropdown1') }}</el-dropdown-item>
+					<!-- <el-dropdown-item command="/home">{{ $t('message.user.dropdown1') }}</el-dropdown-item> -->
 					<!-- <el-dropdown-item command="/404">{{ $t('message.user.dropdown3') }}</el-dropdown-item> -->
-					<!-- <el-dropdown-item command="/401">{{ $t('message.user.dropdown4') }}</el-dropdown-item> -->
-					<el-dropdown-item divided command="logOut">{{ $t('message.user.dropdown5') }}</el-dropdown-item>
+					<!-- <el-dropdown-item command="/401">{{ $t('message.user.dropdown4') }}</el-dropdown-item> divided-->
+					<el-dropdown-item command="logOut">{{ $t('message.user.dropdown5') }}</el-dropdown-item>
 				</el-dropdown-menu>
 			</template>
 		</el-dropdown>
@@ -93,6 +98,7 @@
 import { defineAsyncComponent, ref, unref, computed, reactive, onMounted, onUnmounted, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessageBox, ElMessage, ClickOutside as vClickOutside } from 'element-plus';
+import Cookies from 'js-cookie';
 import screenfull from 'screenfull';
 import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
@@ -157,6 +163,13 @@ const onScreenfullClick = () => {
 // 消息通知点击时
 const onUserNewsClick = () => {
 	unref(userNewsRef).popperRef?.delayHide?.();
+};
+//  深色模式
+const onAddDarkChange = () => {
+	const body = document.documentElement as HTMLElement;
+	themeConfig.value.isIsDark = !themeConfig.value.isIsDark;
+	if (themeConfig.value.isIsDark) body.setAttribute('data-theme', 'dark');
+	else body.setAttribute('data-theme', '');
 };
 // 布局配置 icon 点击时
 const onLayoutSetingClick = () => {

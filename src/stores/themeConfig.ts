@@ -15,7 +15,7 @@ export const useThemeConfig = defineStore('themeConfig', {
 			 * 全局主题
 			 */
 			// 默认 primary 主题颜色
-			primary: '#1890ff',
+			primary: '#0047c5',
 			// 是否开启深色模式
 			isIsDark: false,
 
@@ -23,7 +23,7 @@ export const useThemeConfig = defineStore('themeConfig', {
 			 * 顶栏设置
 			 */
 			// 默认顶栏导航背景颜色
-			topBar: '#438DF5',
+			topBar: '#0047c5',
 			// 默认顶栏导航字体颜色
 			topBarColor: '#ffffff',
 			// 是否开启顶栏背景颜色渐变
@@ -33,11 +33,11 @@ export const useThemeConfig = defineStore('themeConfig', {
 			 * 菜单设置
 			 */
 			// 默认菜单导航背景颜色
-			menuBar: '#3684f7',
+			menuBar: '#0047c5',
 			// 默认菜单导航字体颜色
 			menuBarColor: '#eaeaea',
 			// 默认菜单高亮背景色
-			menuBarActiveColor: 'rgba(0, 0, 0, 0.2)',
+			menuBarActiveColor: '#6077ef',
 			// 是否开启菜单背景颜色渐变
 			isMenuBarColorGradual: false,
 
@@ -45,7 +45,7 @@ export const useThemeConfig = defineStore('themeConfig', {
 			 * 分栏设置
 			 */
 			// 默认分栏菜单背景颜色
-			columnsMenuBar: '#438df5',
+			columnsMenuBar: '#0047c5',
 			// 默认分栏菜单字体颜色
 			columnsMenuBarColor: '#e6e6e6',
 			// 是否开启分栏菜单背景颜色渐变
@@ -85,7 +85,7 @@ export const useThemeConfig = defineStore('themeConfig', {
 			// 是否开启 Breadcrumb 图标
 			isBreadcrumbIcon: false,
 			// 是否开启 Tagsview 图标
-			isTagsviewIcon: false,
+			isTagsviewIcon: true,
 			// 是否开启 TagsView 缓存
 			isCacheTagsView: false,
 			// 是否开启 TagsView 拖拽
@@ -101,7 +101,7 @@ export const useThemeConfig = defineStore('themeConfig', {
 			// 是否开启水印
 			isWartermark: false,
 			// 水印文案
-			wartermarkText: '治工具系统',
+			wartermarkText: 'Rayprus測試軟件系统',
 
 			/**
 			 * 其它设置
