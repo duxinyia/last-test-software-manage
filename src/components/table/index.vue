@@ -43,9 +43,12 @@
 			<div class="table-top-tool" v-if="config.isTopTool">
 				<!-- <SvgIcon name="iconfont icon-dayinji" :size="19" title="打印" @click="onPrintTable" /> -->
 				<!-- <SvgIcon name="iconfont icon-btn-daoru" :size="22" :title="$t('message.tooltip.import')" @click="onImportTable('imp')" /> -->
-				<el-button @click="onExportTable" v-if="config.exportIcon" size="default" class="" type="primary" plain>{{
+				<!-- <el-button @click="onExportTable" v-if="config.exportIcon" size="default" class="" type="primary" plain>{{
 					$t('message.tooltip.export')
-				}}</el-button>
+				}}</el-button> -->
+				<el-icon v-if="config.exportIcon" name="iconfont icon-btn-daochu" :size="22" :title="$t('下載')" @click="onExportTable"
+					><ele-Download
+				/></el-icon>
 				<!-- <el-icon v-if="config.exportIcon" name="iconfont icon-btn-daochu" :size="22" :title="$t('message.tooltip.export')" @click="onExportTable"
 					><ele-Upload
 				/></el-icon> -->
@@ -278,11 +281,12 @@
 					</template>
 					<!-- 鏈接 -->
 					<span v-if="item.type === 'link'">
-						<a target="_blank" href="" @click="clickLink(data[scope.$index][item.key + 'Link'])">{{ scope.row[item.key] }}</a>
+						<a target="_blank" href="javascript:;" @click="clickLink(data[scope.$index][item.key + 'Link'])">{{ scope.row[item.key] }}</a>
 					</span>
 					<span v-if="!config.isInlineEditing && item.type === 'text'" style="text-align: center; width: 100%">
 						{{ scope.row[item.key] }}
 					</span>
+					<slot v-if="item.type === 'slot'" name="column" :row="scope.row"></slot>
 				</template>
 			</el-table-column>
 			<el-table-column
@@ -652,7 +656,7 @@ const onPrintTable = () => {
 };
 // 导出
 const onExportTable = () => {
-	if (state.selectlist.length <= 0) return ElMessage.warning('請先選擇要導出的數據');
+	// if (state.selectlist.length <= 0) return ElMessage.warning('請先選擇要導出的數據');
 	props.header.forEach((item) => {
 		item.title = t(item.title);
 	});

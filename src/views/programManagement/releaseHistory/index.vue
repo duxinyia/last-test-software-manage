@@ -1,8 +1,21 @@
 <template>
 	<div class="table-container layout-padding">
 		<div class="table-padding layout-padding-view layout-padding-auto">
-			<TableSearch ref="tableSearchRef" :search="state.tableData.search" @search="onSearch" :searchConfig="state.tableData.searchConfig" />
-			<Table ref="tableRef" v-bind="state.tableData" class="table" @pageChange="onTablePageChange" @sortHeader="onSortHeader"> </Table>
+			<TableSearch ref="tableSearchRef" :search="state.tableData.search" @search="onSearch" :searchConfig="state.tableData.searchConfig">
+				<template #optionSearchFat="{ row }">
+					<span style="float: left">專案名：{{ row.text }}</span>
+					<span style="float: right; color: var(--el-text-color-secondary)">產線類型:{{ row.label }}</span>
+				</template>
+			</TableSearch>
+			<Table
+				ref="tableRef"
+				v-bind="state.tableData"
+				class="table"
+				@importTable="onExportTableData"
+				@pageChange="onTablePageChange"
+				@sortHeader="onSortHeader"
+			>
+			</Table>
 		</div>
 	</div>
 </template>
@@ -12,8 +25,8 @@ import { defineAsyncComponent, reactive, ref, onMounted, computed, watch, nextTi
 import { ElMessage, FormInstance } from 'element-plus';
 import { useI18n } from 'vue-i18n';
 import { getProjectQueryNoPageApi, getProjectQueryNopageProjectStationApi } from '/@/api/programManagement/programRelease';
-import { postStageQueryNoPageApi } from '/@/api/projectConfiguration/projectManage';
-import { postPublishQueryPageByStationApi } from '/@/api/programManagement/releaseHistory';
+import { getStageQueryNoPageApi } from '/@/api/projectConfiguration/projectManage';
+import { postExportPublishStationApi, postPublishQueryPageByStationApi } from '/@/api/programManagement/releaseHistory';
 // 引入组件
 const Table = defineAsyncComponent(() => import('/@/components/table/index.vue'));
 const TableSearch = defineAsyncComponent(() => import('/@/components/search/search.vue'));
@@ -34,7 +47,7 @@ const state = reactive<TableDemoState>({
 		// 表头内容（必传，注意格式）
 		header: [
 			{ key: 'projectName', colWidth: '', title: '專案名', type: 'text', isCheck: true },
-			{ key: 'productionLineType', colWidth: '', title: '機台類型', type: 'text', isCheck: true },
+			{ key: 'productionLineType', colWidth: '', title: '產線類型', type: 'text', isCheck: true },
 			{ key: 'stationName', colWidth: '', title: '站位名稱', type: 'text', isCheck: true },
 			{ key: 'programName', colWidth: '', title: '程式包名', type: 'text', isCheck: true },
 			{ key: 'version', colWidth: '', title: '程式版本', type: 'text', isCheck: true },
@@ -53,7 +66,8 @@ const state = reactive<TableDemoState>({
 			isOperate: false, // 是否显示表格操作栏
 			isButton: false, //是否显示表格上面的新增删除按钮
 			isInlineEditing: false, //是否是行内编辑
-			isTopTool: false, //是否有表格右上角工具
+			isTopTool: true, //是否有表格右上角工具
+			exportIcon: true, //是否有导出icon(导出功能)
 			isPage: true, //是否有分页
 			operateWidth: 220,
 			isBulkDeletionBtn: false,
@@ -142,7 +156,7 @@ let options: EmptyArrayType = [];
 const getSelect = async () => {
 	const res = await getProjectQueryNoPageApi();
 	options = res.data.map((item: any) => {
-		return { value: item.runid, lable: item.projectname, text: item.projectname, selected: false };
+		return { value: item.runid, label: item.productionlinetype, text: item.projectname, selected: false };
 	});
 	state.tableData.search[0].options = options;
 	// state.tableData.dialogConfig![0].options = options;
@@ -164,6 +178,30 @@ const getStationSelect = async (val: string) => {
 			item.options = options;
 		}
 	});
+};
+// 導出
+const onExportTableData = async (row: EmptyObjectType, hearder: EmptyObjectType) => {
+	const form = state.tableData.form;
+	let data: EmptyObjectType = {
+		...form,
+		startTime: form.publishDate && form.publishDate[0],
+		endTime: form.publishDate && form.publishDate[1],
+	};
+	delete data.publishDate;
+	const res = await postExportPublishStationApi(data);
+	const result: any = res.data;
+	let blob = new Blob([result], {
+		// 这里一定要和后端对应，不然可能出现乱码或者打不开文件
+		type: 'application/vnd.ms-excel',
+	});
+	const link = document.createElement('a');
+	link.href = window.URL.createObjectURL(blob);
+	const temp = res.headers['content-disposition'].split(';')[1].split('filename=')[1].replace(new RegExp('"', 'g'), '');
+	link.download = decodeURIComponent(temp);
+	// link.download = `${t('料號')} ${new Date().toLocaleString()}.xlsx`; // 在前端也可以设置文件名字
+	link.click();
+	//释放内存
+	window.URL.revokeObjectURL(link.href);
 };
 // 页面加载时
 onMounted(() => {

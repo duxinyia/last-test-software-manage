@@ -19,7 +19,7 @@
 								{{ state.tableData.form[val.prop] }}
 							</span>
 							<span v-if="val.type === 'link'">
-								<a target="_blank" href="" @click="clickLink(val.prop)">{{ state.tableData.form[val.prop] }}</a>
+								<a target="_blank" href="javascript:;" @click="clickLink(val.prop)">{{ state.tableData.form[val.prop] }}</a>
 							</span>
 						</el-form-item>
 					</el-col>
@@ -132,6 +132,12 @@ const getTableData = async () => {
 			state.tableData.form = {};
 		}
 	}
+	const programTypeMap: EmptyObjectType = {
+		1: '基礎包',
+		2: '補丁包',
+		3: '完整包',
+	};
+	allData.programType = programTypeMap[allData.programType];
 	allData.creator = `${allData.creator} / ${allData.creatorName}`;
 	allData.fileSize = `${allData.fileSize} MB`;
 	state.tableData.form = allData;

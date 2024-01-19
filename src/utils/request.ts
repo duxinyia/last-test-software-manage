@@ -22,7 +22,7 @@ const service: AxiosInstance = axios.create({
 
 // 添加请求拦截器
 service.interceptors.request.use(
-	(config) => {
+	(config) => {	
 		// 在发送请求之前做些什么 token
 		if (Session.get('token')) {
 			config.headers.Authorization = `Bearer ${Session.get('token')}`;
@@ -39,7 +39,8 @@ service.interceptors.request.use(
 service.interceptors.response.use(
 	(response) => {
 		checkResponse(response);
-		
+		if(response.request.responseType==='blob')
+		return response;
 		// 对响应数据做点什么
 		const res = response.data;
 		if (res.code && res.code !== 0) {
@@ -87,11 +88,11 @@ service.interceptors.response.use(
 const checkResponse =(config:any) =>{
 	//刷新token
 	if (!config.headers) {
-			if (config.getResponseHeader("toolsys_exp") == "1") {
+			if (config.getResponseHeader("Tsms_exp") == "1") {
 					replaceToken();
 			}
 	}
-	else if (config.headers.toolsys_exp == "1") {
+	else if (config.headers.tsms_exp== "1") {
 			replaceToken();
 	}
 }

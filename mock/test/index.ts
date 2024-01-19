@@ -11,7 +11,6 @@ export default [
   {
     url: '/mock/test/fail',
     method: 'get',
-
     response: () => {
       return failResponseWrap(null, '请求出错了呦~', 400)
     }

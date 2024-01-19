@@ -75,7 +75,7 @@ const state = reactive<TableDemoState>({
 		// 搜索表单，动态生成（传空数组时，将不显示搜索，注意格式）
 		search: [
 			{
-				label: '專案名稱',
+				label: '站位名稱',
 				prop: 'stationName',
 				required: false,
 				type: 'input',

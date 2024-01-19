@@ -98,10 +98,10 @@
 							</el-upload>
 							<!-- 上传进度条弹窗 -->
 							<el-dialog v-model="showProgress" title="上传进度" width="30%" :close-on-click-modal="false" :modal="false" :show-close="false">
-								<div class="mb-5">
+								<div class="">
 									<!-- 上传的文件名字 -->
 									<div>{{ state.formData[item.prop] }}</div>
-									<div class="flex-1">
+									<div class="">
 										<!-- 进度条百分比 -->
 										<el-progress :percentage="uploadPercentage" :format="format" max="100"></el-progress>
 									</div>
@@ -136,8 +136,9 @@
 								@change="(val:any) => selectHandelChange(val,item.prop)"
 								:filterable="item.filterable"
 								:remote="item.remote"
+								:reserve-keyword="false"
 								:remote-show-suffix="item.remoteShowSuffix"
-								:remote-method="remoteMethod"
+								:remote-method="(query:string) => remoteMethod(item,query)"
 								:loading="item.loading"
 								:multiple="item.multiple"
 								:max-collapse-tags="item.maxCollapseTags"
@@ -462,14 +463,15 @@ const openDialog = (type: string, row?: any, title?: string, submitTxt?: string)
 		state.dialog.submitTxt = submitTxt || '新 增';
 		// 清空表单，此项需加表单验证才能使用
 		nextTick(() => {
-			if (imageUrl.value) {
-				inputuploadForm.value = '';
-				// 清除图片
-				let upload_list: any = imageuploadRefs.value;
-				upload_list[0]!.clearFiles();
-				imagefileList.value = [];
-				imageUrl.value = '';
-			}
+			state.formData = {};
+			// if (imageUrl.value) {
+			// 	inputuploadForm.value = '';
+			// 	// 清除图片
+			// 	let upload_list: any = imageuploadRefs.value;
+			// 	upload_list[0]!.clearFiles();
+			// 	imagefileList.value = [];
+			// 	imageUrl.value = '';
+			// }
 			dialogFormRef.value.resetFields();
 		});
 	} else if (type === 'edit') {
@@ -611,8 +613,8 @@ const selectHandelChange = (val: string, prop: string) => {
 	emit('selectChange', val, prop, state.formData);
 };
 // 能搜索的下拉框
-const remoteMethod = (query: string) => {
-	emit('remoteMethod', query, state.formData);
+const remoteMethod = (item: EmptyObjectType, query: string) => {
+	emit('remoteMethod', query, state.formData, item);
 };
 
 let flag = true;

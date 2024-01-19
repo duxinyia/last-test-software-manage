@@ -64,10 +64,26 @@ export function deleteProjectDeleteProjectStationApi(runId: string) {
 	});
 }
 // 查询階段（不分頁）
-export function postStageQueryNoPageApi(productionLineType: string) {
+export function getStageQueryNoPageApi(productionLineType: string) {
 	return request({
 		url: '/api/Stage/QueryNoPage',
 		method: 'GET',
 		params:{productionLineType},
+	});
+}
+// 查询機台型號（不分頁）
+export function getMachineQueryNoPageApi(machineTypeName: string) {
+	return request({
+		url: '/api/MachineType/QueryNoPage',
+		method: 'GET',
+		params:{machineTypeName},
+	});
+}
+// 查询站位（不分頁）
+export function getStationQueryNoPageApi(stationName: string) {
+	return request({
+		url: '/api/Station/QueryNoPage',
+		method: 'GET',
+		params:{stationName},
 	});
 }

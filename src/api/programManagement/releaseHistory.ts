@@ -7,3 +7,12 @@ export function postPublishQueryPageByStationApi(data: Object) {
 		data: data,
 	});
 }
+// 導出
+export function postExportPublishStationApi(data:EmptyObjectType) {
+  return request({
+    url: '/api/ExportExcel/ExportPublishStation',
+    method: 'POST',
+    responseType: 'blob', // 设置响应数据类型为 blob
+    data,
+  });
+}

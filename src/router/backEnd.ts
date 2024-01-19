@@ -40,7 +40,7 @@ export async function initBackEndControlRoutes() {
 	// 获取路由菜单数据
 	let res =Local.get('datas') ;
 	// 无登录权限时，添加判断
-	// if (res.length <= 0) return Promise.resolve(true);
+	if (res&&res.length <= 0) return Promise.resolve(true);
 	// 存储接口原始路由（未处理component），根据需求选择使用
 	useRequestOldRoutes().setRequestOldRoutes(JSON.parse(JSON.stringify(res)));
 	// 处理路由（component），替换 dynamicRoutes（/@/router/route）第一个顶级 children 的路由

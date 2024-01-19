@@ -1,7 +1,12 @@
 <template>
 	<div class="table-container layout-padding">
 		<div class="table-padding layout-padding-view layout-padding-auto">
-			<TableSearch ref="tableSearchRef" :search="state.tableData.search" @search="onSearch" :searchConfig="state.tableData.searchConfig" />
+			<TableSearch ref="tableSearchRef" :search="state.tableData.search" @search="onSearch" :searchConfig="state.tableData.searchConfig">
+				<template #optionSearchFat="{ row }">
+					<span style="float: left">專案名：{{ row.text }}</span>
+					<span style="float: right; color: var(--el-text-color-secondary)">產線類型:{{ row.label }}</span>
+				</template>
+			</TableSearch>
 			<Table
 				ref="tableRef"
 				v-bind="state.tableData"
@@ -15,8 +20,8 @@
 				<template #slotCol="{ row }">
 					<el-popover placement="bottom-start" width="20%" trigger="hover">
 						<el-table class="popover-table" :data="row.stationMachines" style="width: 100%" stripe max-height="250">
-							<el-table-column show-overflow-tooltip align="center" prop="machineType" label="機台型號" />
 							<el-table-column show-overflow-tooltip align="center" prop="stationName" label="站位名稱" />
+							<el-table-column show-overflow-tooltip align="center" prop="machineType" label="機台型號" />
 						</el-table>
 						<template #reference>
 							<span style="text-align: center; width: 100%; cursor: pointer"> {{ row.projectName }} </span>
@@ -30,7 +35,7 @@
 				:dialogConfig="btnType !== 'publish' ? state.tableData.dialogConfig : []"
 				@addData="addData"
 				:loadingBtn="loadingBtn"
-				dialogWidth="50%"
+				:dialogWidth="btnType === 'publish' ? '70%' : '50%'"
 				:isFootBtn="btnType !== 'publish' ? true : false"
 				@selectChange="onSelectChange"
 				@inputHandleChange="onInputHandleChange"
@@ -38,7 +43,13 @@
 			>
 				<template #dialogTable="{ data }">
 					<el-form ref="tableFormRef" :model="satusState.tableData" size="default">
-						<Table v-if="data.dialog.type === 'publish'" ref="dialogTableRef" v-bind="satusState.tableData" class="table-dialog" />
+						<Table v-if="data.dialog.type === 'publish'" ref="dialogTableRef" v-bind="satusState.tableData" class="table-dialog">
+							<template #column="{ row }">
+								<a target="_blank" href="javascript:;" style="display: block" v-for="item in row.attList" @click="clickLink(item.fileUrl)">
+									{{ item.fileName }}
+								</a>
+							</template>
+						</Table>
 					</el-form>
 				</template>
 				<template #optionFat="{ row, items }">
@@ -46,6 +57,8 @@
 					<span v-if="items.prop === 'stationName'" style="float: right; color: var(--el-text-color-secondary); font-size: 13px"
 						>機台型號：{{ row.label }}</span
 					>
+					<span v-if="items.prop === 'projectId'" style="float: left">專案名：{{ row.text }}</span>
+					<span v-if="items.prop === 'projectId'" style="float: right; color: var(--el-text-color-secondary)">產線類型:{{ row.label }}</span>
 				</template>
 			</Dialog>
 			<el-dialog draggable :close-on-click-modal="false" v-model="detaildialogVisible" title="程式發佈詳情" width="45%"
@@ -68,7 +81,7 @@ import {
 	postPublishQueryPageApi,
 	postPublishSubmitSignApi,
 } from '/@/api/programManagement/programRelease';
-import { postStageQueryNoPageApi } from '/@/api/projectConfiguration/projectManage';
+import { getStageQueryNoPageApi } from '/@/api/projectConfiguration/projectManage';
 // 引入组件
 const Table = defineAsyncComponent(() => import('/@/components/table/index.vue'));
 const TableSearch = defineAsyncComponent(() => import('/@/components/search/search.vue'));
@@ -315,7 +328,7 @@ const satusState = reactive<TableDemoState>({
 			{ key: 'signUserRemarks', colWidth: '', title: '簽核節點', type: 'text', isCheck: true },
 			{ key: 'updateTime', colWidth: '', title: '簽核時間', type: 'text', isCheck: true },
 			{ key: 'signFlowNodeMemo', colWidth: '', title: '簽核意見', type: 'text', isCheck: true },
-			{ key: 'programType', colWidth: '', title: '電子文檔', type: 'link', isCheck: true },
+			{ key: 'programType', colWidth: '470', title: '電子文檔', type: 'slot', isCheck: true },
 			{ key: 'proxyUserId', colWidth: '', title: '代理人', type: 'text', isCheck: true },
 		],
 		// 配置项（必传）
@@ -367,7 +380,6 @@ const onOtherBtn = async (scope: EmptyObjectType, type: string) => {
 			.catch(() => {});
 	} else if (type === 'signProgress') {
 		satusState.tableData.config.loading = true;
-
 		btnType.value = 'publish';
 		stationDialogRef.value.openDialog('publish', scope.row, '程式簽核信息');
 		const res = await getPublishGetSignFlowApi(scope.row.publishId);
@@ -376,9 +388,16 @@ const onOtherBtn = async (scope: EmptyObjectType, type: string) => {
 				item.signFlowOrderUserId = `${item.signFlowOrderUserId} / ${item.signFlowOrderUserName}`;
 				item.proxyUserId = item.proxyUserId && `${item.proxyUserId} / ${item.proxyUserName}`;
 				// 電子文檔
-				if (item.attList) {
-					item.programType = item.attList[0].fileName;
-					item.programTypeLink = item.attList[0].fileUrl;
+				let file: EmptyObjectType = {};
+				let filename: EmptyArrayType = [];
+				if (item.attList && item.attList.length > 0) {
+					item.attList.forEach((item: any) => {
+						filename.push(item.fileName);
+						file[item.programType] = item.programTypeLink;
+					});
+					item.programType = filename.join(',');
+					// item.programType = item.attList[0].fileName;
+					// item.programTypeLink = item.attList[0].fileUrl;
 				}
 			});
 			satusState.tableData.data = res.data;
@@ -405,7 +424,7 @@ const getTableData = async () => {
 	delete data.publishDate;
 	const res = await postPublishQueryPageApi(data);
 	res.data.data.forEach((item: any) => {
-		item.programType = programTypeMap[item.programType];
+		item.programType = t(programTypeMap[item.programType]);
 		item.sendIsShow = item.delDisabled = item.signStatus === 0 ? false : true;
 		item.signProgressIsShow = !item.sendIsShow;
 	});
@@ -415,7 +434,18 @@ const getTableData = async () => {
 		state.tableData.config.loading = false;
 	}
 };
-
+// 點擊單子文檔
+const clickLink = (row: string) => {
+	window.open(row);
+};
+// 单元格内容换行
+// const formatArray = (row: any) => {
+// if (row.programType && row.programType.includes(',')) {
+// 	return row.programType.split(',').join('<br>');
+// } else {
+// 	return row.programType;
+// }
+// };
 // 搜索点击时表单回调
 const onSearch = (data: EmptyObjectType) => {
 	state.tableData.form = Object.assign({}, state.tableData.form, { ...data });
@@ -542,7 +572,12 @@ let options: EmptyArrayType = [];
 const getSelect = async () => {
 	const res = await getProjectQueryNoPageApi();
 	options = res.data.map((item: any) => {
-		return { value: item.runid, lable: item.projectname, text: item.projectname, selected: false };
+		return {
+			value: item.runid,
+			label: item.productionlinetype,
+			text: item.projectname,
+			selected: false,
+		};
 	});
 	state.tableData.search[0].options = options;
 	state.tableData.dialogConfig![0].options = options;

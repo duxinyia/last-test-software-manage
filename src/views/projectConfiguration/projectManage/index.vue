@@ -41,6 +41,7 @@
 				ref="projectPositionDialogRef"
 				:dialogConfig="dialogState.tableData.dialogConfig"
 				dialogWidth="20%"
+				@remoteMethod="remoteMethod"
 				@addData="addPositionData"
 				:loadingBtn="loadingBtn"
 			>
@@ -62,7 +63,9 @@ import {
 	putProjectUpdateProjectStationApi,
 	postProjectAddProjectStationApi,
 	deleteProjectDeleteProjectStationApi,
-	postStageQueryNoPageApi,
+	getStageQueryNoPageApi,
+	getMachineQueryNoPageApi,
+	getStationQueryNoPageApi,
 } from '/@/api/projectConfiguration/projectManage';
 // 引入组件
 const Table = defineAsyncComponent(() => import('/@/components/table/index.vue'));
@@ -225,7 +228,12 @@ const dialogState = reactive<TableDemoState>({
 				prop: 'machinetype',
 				placeholder: '请輸入機台型號',
 				required: true,
-				type: 'input',
+				type: 'select',
+				options: [],
+				loading: true,
+				filterable: true,
+				remote: true,
+				remoteShowSuffix: true,
 				xs: 24,
 				sm: 24,
 				md: 24,
@@ -238,7 +246,12 @@ const dialogState = reactive<TableDemoState>({
 				prop: 'stationname',
 				placeholder: '请輸入站位名稱',
 				required: true,
-				type: 'input',
+				type: 'select',
+				options: [],
+				loading: true,
+				filterable: true,
+				remote: true,
+				remoteShowSuffix: true,
 				xs: 24,
 				sm: 24,
 				md: 24,
@@ -259,7 +272,7 @@ const dialogState = reactive<TableDemoState>({
 let options: EmptyArrayType = [];
 const onSelectChange = async (val: string, prop: string, data: EmptyObjectType, flag?: number) => {
 	if (prop === 'productionlinetype') {
-		const res = await postStageQueryNoPageApi(data.productionlinetype);
+		const res = await getStageQueryNoPageApi(data.productionlinetype);
 		if (flag != 1) data.stage = '';
 		options = res.data.map((item: any) => {
 			return { value: item.stage, lable: item.stage, text: item.stage, selected: false };
@@ -293,6 +306,50 @@ const changeType = (type: string, isShow: boolean) => {
 		item.required = isShow;
 	});
 	isFootBtn.value = dialogState.tableData.config.isOperate = dialogState.tableData.config.isButton = isShow;
+};
+// 搜索下拉
+const remoteMethod = (query: string, data: EmptyObjectType, prop: EmptyObjectType) => {
+	let dialogConfig = dialogState.tableData.dialogConfig;
+	dialogConfig?.forEach((item) => {
+		if (prop.prop === item.prop) item.loading = true;
+	});
+	if (prop.prop === 'machinetype') {
+		if (query) {
+			setTimeout(async () => {
+				dialogConfig?.forEach(async (item) => {
+					if (item.prop === 'machinetype') {
+						const res = await getMachineQueryNoPageApi(query);
+						item.loading = false;
+						item.options = res.data.map((item: EmptyObjectType) => {
+							return { ...item, value: `${item.machinetypename}`, label: `${item.machinetypename}`, text: `${item.machinetypename}` };
+						});
+					}
+				});
+			}, 500);
+		} else {
+			dialogConfig?.forEach((item) => {
+				item.options = [];
+			});
+		}
+	} else {
+		if (query) {
+			setTimeout(async () => {
+				dialogConfig?.forEach(async (item) => {
+					if (item.prop === 'stationname') {
+						const res = await getStationQueryNoPageApi(query);
+						item.loading = false;
+						item.options = res.data.map((item: EmptyObjectType) => {
+							return { ...item, value: `${item.stationname}`, label: `${item.stationname}`, text: `${item.stationname}` };
+						});
+					}
+				});
+			}, 500);
+		} else {
+			dialogConfig?.forEach((item) => {
+				item.options = [];
+			});
+		}
+	}
 };
 //彈窗删除
 const onDelRow = async (row: EmptyObjectType, i: number) => {
