@@ -2,7 +2,7 @@
 	<div :class="{ main: !isDialog }" class="main-detail" :style="!isDialog ? 'height: 535px' : ''">
 		<div class="table-container" :class="{ 'link-width': !isDialog }">
 			<nav v-if="!isDialog" class="pb10">程式發佈詳情</nav>
-			<el-form v-if="state.tableData.form" ref="tableSearchRef" :model="state.tableData.form" size="default" label-width="100px">
+			<el-form v-if="state.tableData.form" ref="tableSearchRef" :model="state.tableData.form" size="default" label-width="auto">
 				<el-row :gutter="35">
 					<el-col
 						:xs="val.xs || 24"
@@ -16,7 +16,11 @@
 					>
 						<el-form-item :label="$t(val.label)" :prop="val.prop">
 							<span v-if="val.type === 'text'" style="width: 100%; font-weight: 700; color: #1890ff">
-								{{ state.tableData.form[val.prop] }}
+								{{
+									state.tableData.form.programType && val.transfer
+										? $t(val.transfer[state.tableData.form.programType])
+										: state.tableData.form[val.prop]
+								}}
 							</span>
 							<span v-if="val.type === 'link'">
 								<a target="_blank" href="javascript:;" @click="clickLink(val.prop)">{{ state.tableData.form[val.prop] }}</a>
@@ -39,6 +43,7 @@ import { useI18n } from 'vue-i18n';
 import { getPublishDetailApi } from '/@/api/programManagement/programRelease';
 // 引入组件
 const Table = defineAsyncComponent(() => import('/@/components/table/index.vue'));
+const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
 // 定义父组件传过来的值
@@ -58,8 +63,9 @@ const state = reactive<TableDemoState>({
 		data: [],
 		// 表头内容（必传，注意格式）
 		header: [
-			{ key: 'stationName', colWidth: '', title: '站位名稱', type: 'text', isCheck: true },
-			{ key: 'machineType', colWidth: '', title: '機台類型', type: 'text', isCheck: true },
+			{ key: 'stationName', colWidth: '', title: 'message.pages.stationName', type: 'text', isCheck: true },
+			{ key: 'stationCode', colWidth: '', title: 'message.pages.stationCode', type: 'input', isCheck: true, isRequired: false },
+			{ key: 'machineType', colWidth: '', title: 'message.pages.machineType', type: 'text', isCheck: true },
 		],
 		// 配置项（必传）
 		config: {
@@ -80,16 +86,57 @@ const state = reactive<TableDemoState>({
 		form: {},
 		// 搜索表单，动态生成（传空数组时，将不显示搜索，注意格式）
 		search: [
-			{ type: 'text', label: '專案名稱', placeholder: '', prop: 'projectName', required: false },
-			{ type: 'text', label: '產線類型', placeholder: '', prop: 'productionLineType', required: false },
-			{ type: 'link', label: '程式包名', placeholder: '', prop: 'programName', required: false, xs: 24, sm: 24, md: 24, lg: 24, xl: 24 },
-			{ type: 'text', label: '發佈類型', placeholder: '', prop: 'programType', required: false },
-			{ type: 'text', label: '程式版本', placeholder: '', prop: 'version', required: false },
-			{ type: 'text', label: '程式包大小', placeholder: '', prop: 'fileSize', required: false },
-			{ type: 'text', label: '發佈時間', placeholder: '', prop: 'createTime', required: false },
+			{ type: 'text', label: 'message.pages.projectName', placeholder: '', prop: 'projectName', required: false },
+			{ type: 'text', label: 'message.pages.productionlinetype', placeholder: '', prop: 'productionLineType', required: false },
+			{ type: 'text', label: 'message.pages.stage', placeholder: '', prop: 'stage', required: false },
+			{
+				label: 'message.pages.projectCode',
+				prop: 'projectCode',
+				placeholder: '',
+				required: false,
+				type: 'text',
+				standbyType: 'text',
+				isCheck: true,
+			},
+			{
+				label: 'message.pages.programName',
+				prop: 'programName',
+				placeholder: '',
+				required: false,
+				type: 'text',
+				standbyType: 'text',
+				isCheck: true,
+			},
+			{
+				type: 'link',
+				label: 'message.pages.packageName',
+				placeholder: '',
+				prop: 'programAttName',
+				required: false,
+				xs: 24,
+				sm: 24,
+				md: 24,
+				lg: 24,
+				xl: 24,
+			},
+			{
+				type: 'text',
+				label: 'message.pages.releaseType',
+				placeholder: '',
+				prop: 'programType',
+				required: false,
+				transfer: {
+					1: 'message.pages.basePackage',
+					2: 'message.pages.patchPackage',
+					3: 'message.pages.completePackage',
+				},
+			},
+			{ type: 'text', label: 'message.pages.programVersion', placeholder: '', prop: 'version', required: false },
+			{ type: 'text', label: 'message.pages.packageSize', placeholder: '', prop: 'fileSize', required: false },
+			{ type: 'text', label: 'message.pages.releaseTime', placeholder: '', prop: 'createTime', required: false },
 			{ type: 'link', label: 'lws', placeholder: '', prop: 'lwsFileName', required: false, xs: 24, sm: 24, md: 24, lg: 24, xl: 24 },
-			{ type: 'text', label: '發佈人', placeholder: '', prop: 'creator', required: false },
-			{ type: 'text', label: '發佈狀態', placeholder: '', prop: 'runStatusText', required: false },
+			{ type: 'text', label: 'message.pages.publishers', placeholder: '', prop: 'creator', required: false },
+			{ type: 'text', label: 'message.pages.releaseStatus', placeholder: '', prop: 'runStatusText', required: false },
 			// { type: 'link', label: '下載程式包', placeholder: '', prop: 'filePath', required: false, xs: 24, sm: 24, md: 24, lg: 24, xl: 24 },
 		],
 		dialogConfig: [],
@@ -132,12 +179,12 @@ const getTableData = async () => {
 			state.tableData.form = {};
 		}
 	}
-	const programTypeMap: EmptyObjectType = {
-		1: '基礎包',
-		2: '補丁包',
-		3: '完整包',
-	};
-	allData.programType = programTypeMap[allData.programType];
+	// const programTypeMap: EmptyObjectType = {
+	// 	1: '基礎包',
+	// 	2: '補丁包',
+	// 	3: '完整包',
+	// };
+	// allData.programType = allData.programType;
 	allData.creator = `${allData.creator} / ${allData.creatorName}`;
 	allData.fileSize = `${allData.fileSize} MB`;
 	state.tableData.form = allData;

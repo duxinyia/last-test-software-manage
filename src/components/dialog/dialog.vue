@@ -1,7 +1,8 @@
 <template>
 	<div class="system-menu-dialog-container">
 		<el-dialog draggable :close-on-click-modal="false" :title="state.dialog.title" v-model="state.dialog.isShowDialog" :width="dialogWidth">
-			<el-form v-if="state.dialog.type !== 'imp'" ref="dialogFormRef" :model="state.formData" size="default" :label-width="labelWidth || '100px'">
+			<slot name="dialogSearch" :datas="state"></slot>
+			<el-form v-if="state.dialog.type !== 'imp'" ref="dialogFormRef" :model="state.formData" size="default" :label-width="labelWidth || 'auto'">
 				<el-row :gutter="35">
 					<el-col
 						:xs="item.xs || 24"
@@ -18,7 +19,7 @@
 								:maxlength="item.maxlength"
 								v-if="item.type === 'input'"
 								v-model="state.formData[item.prop]"
-								:placeholder="$t(item.placeholder)"
+								:placeholder="$t(item.placeholder) || `${$t('message.pages.pleaseEnter')} ${$t(item.label)}`"
 								clearable
 								:disabled="item.disabled"
 							></el-input>
@@ -128,7 +129,7 @@
 							</el-upload>
 							<el-select
 								v-model="state.formData[item.prop]"
-								:placeholder="$t(item.placeholder)"
+								:placeholder="$t(item.placeholder) || `${$t('message.pages.pleaseSelect')} ${$t(item.label)}`"
 								:clearable="item.clearable"
 								v-if="item.type === 'select'"
 								style="width: 100%"
@@ -145,7 +146,7 @@
 								:collapse-tags="item.collapseTags"
 								:collapse-tags-tooltip="item.collapseTagsTooltip"
 							>
-								<el-option v-for="val in item.options" :key="val.value || val.label" :label="val.text" :value="val.value">
+								<el-option v-for="val in item.options" :key="val.value || $t(val.label)" :label="$t(val.text)" :value="val.value">
 									<slot name="optionFat" :row="val" :items="item"></slot>
 								</el-option>
 							</el-select>
@@ -161,7 +162,7 @@
 								v-if="item.type === 'textarea'"
 								v-model="state.formData[item.prop]"
 								type="textarea"
-								:placeholder="$t(item.placeholder)"
+								:placeholder="$t(item.placeholder) || `${$t('message.pages.pleaseEnter')} ${$t(item.label)}`"
 								:maxlength="item.maxlength || 5000"
 								:autosize="{ minRows: item.minRows, maxRows: item.maxRows }"
 							></el-input>
@@ -184,7 +185,7 @@
 					</el-col>
 				</el-row>
 			</el-form>
-			<slot name="dialogTable" :data="state"></slot>
+			<slot name="dialogTable" :datas="state"></slot>
 			<el-form v-if="state.dialog.type === 'imp'" class="drawer-multiColumn-form" label-width="100px">
 				<el-button size="default" class="buttonBorder mb10" @click="ondownloadTemp" type="primary" plain>{{ $t('下載模板') }}</el-button>
 				<div class="download-form">
@@ -285,7 +286,8 @@
 			</template>
 			<template #footer v-if="isFootBtn">
 				<span class="dialog-footer">
-					<el-button @click="onCancel" size="default">取 消</el-button>
+					<slot name="dialogOtherFooter" :datas="state" :ref="dialogFormRef"></slot>
+					<el-button @click="onCancel" size="default">{{ $t('message.allButton.cancel') }}</el-button>
 					<slot name="dialogBtn" :data="state" :ref="dialogFormRef"></slot>
 					<el-button :disabled="footBtnDisabled" :loading="loadingBtn" type="primary" @click="onSubmit(dialogFormRef)" size="default">{{
 						state.dialog.submitTxt
@@ -326,6 +328,7 @@ const emit = defineEmits([
 	'innnerDialogSubmit',
 	'openInnerDialog',
 	'editDialog',
+	'otherDialog',
 	'remoteMethod',
 	'handleNumberInputChange',
 	'inputHandleChange',
@@ -369,7 +372,7 @@ const props = defineProps({
 	},
 	labelWidth: {
 		type: String,
-		default: () => '100px',
+		default: () => 'auto',
 	},
 });
 const { t } = useI18n();
@@ -424,7 +427,7 @@ const handleNumberInputChange = (value: number) => {
 const validatePass = (rule: any, value: any, callback: any, item: EmptyObjectType) => {
 	const validateForm = item.validateForm;
 	if (value === '') {
-		callback(new Error(`${t(item.label)}不能為空`));
+		callback(new Error(`${t(item.label)} ${t('message.hint.noEmpty')}`));
 	} else if (
 		(validateForm && validateForm === 'phone' && !verifyPhone(value) && !verifyTelPhone(value)) ||
 		(validateForm === 'email' && !verifyEmail(value)) ||
@@ -440,7 +443,7 @@ const allRules = (item: EmptyObjectType) => {
 		default: [
 			{
 				required: item.required,
-				message: `${t(item.label)}不能為空`,
+				message: `${t(item.label)} ${t('message.hint.noEmpty')}`,
 				trigger:
 					item.type === 'input' || item.type === 'inputFile' || item.type === 'textarea' || item.type === 'select' || item.type === 'optionFile'
 						? 'blur'
@@ -459,8 +462,8 @@ const allRules = (item: EmptyObjectType) => {
 const openDialog = (type: string, row?: any, title?: string, submitTxt?: string) => {
 	if (type === 'add') {
 		state.dialog.isdisable = false;
-		state.dialog.title = '新增' + title || '新增';
-		state.dialog.submitTxt = submitTxt || '新 增';
+		state.dialog.title = t('message.allButton.addBtn') + ' ' + t(title!) || t('message.allButton.addBtn');
+		state.dialog.submitTxt = t('message.allButton.addSubmit') || t(submitTxt!);
 		// 清空表单，此项需加表单验证才能使用
 		nextTick(() => {
 			state.formData = {};
@@ -478,8 +481,8 @@ const openDialog = (type: string, row?: any, title?: string, submitTxt?: string)
 		nextTick(() => {
 			dialogFormRef.value?.clearValidate();
 		});
-		state.dialog.title = '修改' + title || '修改';
-		state.dialog.submitTxt = '修 改';
+		state.dialog.title = t('message.allButton.editBtn') + ' ' + t(title!) || t('message.allButton.editBtn');
+		state.dialog.submitTxt = t('message.allButton.editSubmit');
 		// 解决表单重置不成功的问题
 		nextTick(() => {
 			state.formData = JSON.parse(JSON.stringify(row));
@@ -498,10 +501,10 @@ const openDialog = (type: string, row?: any, title?: string, submitTxt?: string)
 		state.dialog.title = '上傳文件';
 		state.dialog.submitTxt = '開始上傳';
 	} else {
-		state.dialog.title = title;
-		state.dialog.submitTxt = '提 交';
+		state.dialog.title = t(title!);
+		state.dialog.submitTxt = t(submitTxt!) || t('提交');
 		nextTick(() => {
-			state.formData = JSON.parse(JSON.stringify(row));
+			if (row) state.formData = JSON.parse(JSON.stringify(row));
 			dialogFormRef.value && dialogFormRef.value.resetFields();
 			innnerDialogFormRef.value && innnerDialogFormRef.value.resetFields();
 		});

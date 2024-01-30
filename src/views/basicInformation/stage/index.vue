@@ -49,8 +49,8 @@ const state = reactive<TableDemoState>({
 		data: [],
 		// 表头内容（必传，注意格式）
 		header: [
-			{ key: 'productionlinetype', colWidth: '', title: '產線類型', type: 'text', isCheck: true },
-			{ key: 'stage', colWidth: '', title: '階段', type: 'text', isCheck: true },
+			{ key: 'productionlinetype', colWidth: '', title: 'message.pages.productionlinetype', type: 'text', isCheck: true },
+			{ key: 'stage', colWidth: '', title: 'message.pages.stage', type: 'text', isCheck: true },
 		],
 		// 配置项（必传）
 		config: {
@@ -67,7 +67,7 @@ const state = reactive<TableDemoState>({
 			operateWidth: 220,
 			isBulkDeletionBtn: false,
 		},
-		topBtnConfig: [{ type: 'add', name: '新增階段', defaultColor: 'primary', isSure: true, disabled: true }],
+		topBtnConfig: [{ type: 'add', name: 'message.pages.addStage', defaultColor: 'primary', isSure: true, disabled: true }],
 		btnConfig: [
 			{ type: 'edit', name: 'message.allButton.editBtn', isSure: false, icon: 'ele-Edit', defaultColor: 'warning' },
 			{ type: 'del', name: 'message.allButton.deleteBtn', isSure: true, defaultColor: 'danger' },
@@ -75,7 +75,8 @@ const state = reactive<TableDemoState>({
 		// 搜索表单，动态生成（传空数组时，将不显示搜索，注意格式）
 		search: [
 			{
-				label: '產線類型',
+				label: 'message.pages.productionlinetype',
+				placeholder: '',
 				prop: 'ProductionLineType',
 				required: false,
 				type: 'select',
@@ -100,9 +101,9 @@ const state = reactive<TableDemoState>({
 		// 弹窗表单
 		dialogConfig: [
 			{
-				label: '產線類型',
+				label: 'message.pages.productionlinetype',
 				prop: 'productionlinetype',
-				placeholder: '请選擇產線類型',
+				placeholder: '',
 				required: true,
 				type: 'select',
 				standbyType: 'select',
@@ -118,9 +119,9 @@ const state = reactive<TableDemoState>({
 				xl: 24,
 			},
 			{
-				label: '階段',
+				label: 'message.pages.stage',
 				prop: 'stage',
-				placeholder: '请輸入站位名稱',
+				placeholder: '',
 				required: true,
 				type: 'input',
 				standbyType: 'input',
@@ -162,7 +163,7 @@ const onSearch = (data: EmptyObjectType) => {
 };
 // 打开新增編輯弹窗
 const openDialog = (type: string, row: EmptyObjectType) => {
-	stationDialogRef.value.openDialog(type, row, '階段');
+	stationDialogRef.value.openDialog(type, row, 'message.pages.stage');
 };
 
 // 新增数据  修改数据
@@ -171,7 +172,7 @@ const addData = async (ruleForm: EmptyObjectType, type: string) => {
 	const { productionlinetype, stage, runid } = ruleForm;
 	const res = type === 'add' ? await postStageAddApi({ productionlinetype, stage }) : await putStageUpdataApi({ productionlinetype, stage, runid });
 	if (res.status) {
-		type === 'add' ? ElMessage.success(`新增成功`) : ElMessage.success(`修改成功`);
+		type === 'add' ? ElMessage.success(t(`message.hint.addSuccess`)) : ElMessage.success(t(`message.hint.modifiedSuccess`));
 		stationDialogRef.value.closeDialog();
 		getTableData();
 	}

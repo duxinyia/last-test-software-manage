@@ -109,12 +109,14 @@ import mittBus from '/@/utils/mitt';
 import { Session, Local } from '/@/utils/storage';
 import { formatDate } from '/@/utils/formatTime';
 import { color } from 'echarts';
+import { useRoute } from 'vue-router';
 
 // 引入组件
 const UserNews = defineAsyncComponent(() => import('/@/layout/navBars/topBar/userNews.vue'));
 const Search = defineAsyncComponent(() => import('/@/layout/navBars/topBar/search.vue'));
 
 // 定义变量内容
+const route = useRoute();
 const userNewsRef = ref();
 const userNewsBadgeRef = ref();
 const currentTime = ref();
@@ -235,6 +237,8 @@ const onLanguageChange = (lang: string) => {
 	locale.value = lang;
 	other.useTitle();
 	initI18nOrSize('globalI18n', 'disabledI18n');
+	// 刷新页面
+	// mittBus.emit('onTagsViewRefreshRouterView', route.fullPath);
 };
 // 初始化组件大小/i18n
 const initI18nOrSize = (value: string, attr: string) => {

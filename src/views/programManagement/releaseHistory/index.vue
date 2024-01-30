@@ -3,8 +3,8 @@
 		<div class="table-padding layout-padding-view layout-padding-auto">
 			<TableSearch ref="tableSearchRef" :search="state.tableData.search" @search="onSearch" :searchConfig="state.tableData.searchConfig">
 				<template #optionSearchFat="{ row }">
-					<span style="float: left">專案名：{{ row.text }}</span>
-					<span style="float: right; color: var(--el-text-color-secondary)">產線類型:{{ row.label }}</span>
+					<span style="float: left">{{ t('message.pages.projectName') }}：{{ row.text }}</span>
+					<span style="float: right; color: var(--el-text-color-secondary)">{{ t('message.pages.productionlinetype') }}：{{ row.label }}</span>
 				</template>
 			</TableSearch>
 			<Table
@@ -46,14 +46,25 @@ const state = reactive<TableDemoState>({
 		data: [],
 		// 表头内容（必传，注意格式）
 		header: [
-			{ key: 'projectName', colWidth: '', title: '專案名', type: 'text', isCheck: true },
-			{ key: 'productionLineType', colWidth: '', title: '產線類型', type: 'text', isCheck: true },
-			{ key: 'stationName', colWidth: '', title: '站位名稱', type: 'text', isCheck: true },
-			{ key: 'programName', colWidth: '', title: '程式包名', type: 'text', isCheck: true },
-			{ key: 'version', colWidth: '', title: '程式版本', type: 'text', isCheck: true },
-			{ key: 'createTime', colWidth: '', title: '發佈開始時間', type: 'text', isCheck: true },
-			{ key: 'programType', colWidth: '', title: '發佈包類型', type: 'text', isCheck: true },
-			{ key: 'fileSize', colWidth: '', title: '程式包大小', type: 'text', isCheck: true },
+			{ key: 'projectName', colWidth: '', title: 'message.pages.projectName', type: 'text', isCheck: true },
+			{ key: 'productionLineType', colWidth: '', title: 'message.pages.productionlinetype', type: 'text', isCheck: true },
+			{ key: 'stationName', colWidth: '', title: 'message.pages.stationName', type: 'text', isCheck: true },
+			{ key: 'programName', colWidth: '', title: 'message.pages.packageName', type: 'text', isCheck: true },
+			{ key: 'version', colWidth: '', title: 'message.pages.programVersion', type: 'text', isCheck: true },
+			{ key: 'createTime', colWidth: '', title: 'message.pages.publicationStartTime', type: 'text', isCheck: true },
+			{
+				key: 'programType',
+				colWidth: '',
+				title: 'message.pages.releasePackageType',
+				type: 'text',
+				isCheck: true,
+				transfer: {
+					1: 'message.pages.basePackage',
+					2: 'message.pages.patchPackage',
+					3: 'message.pages.completePackage',
+				},
+			},
+			{ key: 'fileSize', colWidth: '', title: 'message.pages.packageSize', type: 'text', isCheck: true },
 			// { key: 'runStatusText', colWidth: '', title: '發佈狀態', type: 'text', isCheck: true },
 		],
 		// 配置项（必传）
@@ -76,9 +87,9 @@ const state = reactive<TableDemoState>({
 		btnConfig: [],
 		// 搜索表单，动态生成（传空数组时，将不显示搜索，注意格式）
 		search: [
-			{ label: '專案名', prop: 'projectId', required: false, type: 'select', options: [] },
+			{ label: 'message.pages.projectName', placeholder: '', prop: 'projectId', required: false, type: 'select', options: [] },
 			{
-				label: '站位名稱',
+				label: 'message.pages.stationName',
 				prop: 'stationName',
 				required: false,
 				type: 'input',
@@ -89,7 +100,7 @@ const state = reactive<TableDemoState>({
 			// 	required: false,
 			// 	type: 'select',
 			// },
-			{ label: '發佈時間', prop: 'publishDate', required: false, type: 'dateRange' },
+			{ label: 'message.pages.releaseTime', prop: 'publishDate', required: false, type: 'dateRange' },
 		],
 		searchConfig: {
 			isSearchBtn: true,
@@ -111,11 +122,6 @@ const state = reactive<TableDemoState>({
 // 初始化列表数据
 const getTableData = async () => {
 	const form = state.tableData.form;
-	const programTypeMap: EmptyObjectType = {
-		1: '基礎包',
-		2: '補丁包',
-		3: '完整包',
-	};
 	let data: EmptyObjectType = {
 		...form,
 		startTime: form.publishDate && form.publishDate[0],
@@ -125,9 +131,6 @@ const getTableData = async () => {
 	delete data.publishDate;
 	const res = await postPublishQueryPageByStationApi(data);
 	if (res.data.data === null) res.data.data = [];
-	res.data.data.forEach((item: any) => {
-		item.programType = programTypeMap[item.programType];
-	});
 	state.tableData.data = res.data.data;
 	state.tableData.config.total = res.data.total;
 	if (res.status) {

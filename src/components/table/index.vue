@@ -46,7 +46,7 @@
 				<!-- <el-button @click="onExportTable" v-if="config.exportIcon" size="default" class="" type="primary" plain>{{
 					$t('message.tooltip.export')
 				}}</el-button> -->
-				<el-icon v-if="config.exportIcon" name="iconfont icon-btn-daochu" :size="22" :title="$t('下載')" @click="onExportTable"
+				<el-icon v-if="config.exportIcon" name="iconfont icon-btn-daochu" :size="22" :title="$t('message.tooltip.download')" @click="onExportTable"
 					><ele-Download
 				/></el-icon>
 				<!-- <el-icon v-if="config.exportIcon" name="iconfont icon-btn-daochu" :size="22" :title="$t('message.tooltip.export')" @click="onExportTable"
@@ -104,18 +104,27 @@
 			:data="data"
 			:border="setBorder"
 			v-bind="$attrs"
-			:row-key="config.isSelection ? selRowKey : ' '"
+			:row-key="config.isSelection || config.expand ? selRowKey : ' '"
 			:stripe="objectSpanMethod ? false : true"
 			style="width: 100%"
 			:header-row-style="{ background: '' }"
 			v-loading="config.loading"
 			@selection-change="onSelectionChange"
 			@cell-click="cellClick"
+			@row-click="rowClick"
 			:cell-style="cellStyle"
 			:span-method="objectSpanMethod"
+			:expand-row-keys="expandedRowKeys"
+			@expand-change="toggleRowExpansion"
+			@current-change="handleCurrentChange"
 		>
 			<el-table-column type="selection" :reserve-selection="true" width="30" v-if="config.isSelection" />
 			<el-table-column align="center" type="index" :index="indexMethod" :label="$t('message.pages.no')" width="70" v-if="config.isSerialNo" />
+			<el-table-column type="expand" v-if="config.expand">
+				<template #default="props">
+					<slot name="expand" :expandProps="props"></slot>
+				</template>
+			</el-table-column>
 			<el-table-column
 				align="center"
 				v-for="(item, index) in setHeader"
@@ -284,7 +293,7 @@
 						<a target="_blank" href="javascript:;" @click="clickLink(data[scope.$index][item.key + 'Link'])">{{ scope.row[item.key] }}</a>
 					</span>
 					<span v-if="!config.isInlineEditing && item.type === 'text'" style="text-align: center; width: 100%">
-						{{ scope.row[item.key] }}
+						{{ item.transfer ? $t(item.transfer[scope.row[item.key]]) : scope.row[item.key] }}
 					</span>
 					<slot v-if="item.type === 'slot'" name="column" :row="scope.row"></slot>
 				</template>
@@ -429,6 +438,10 @@ const props = defineProps({
 	indexMethod: {
 		type: Function,
 	},
+	expandedRowKeys: {
+		type: Array,
+		default: () => [],
+	},
 });
 
 // 定义子组件向父组件传值/事件
@@ -455,9 +468,23 @@ const emit = defineEmits([
 	'handleNumberInputBlur',
 	'onOpentopBtnOther',
 	'remoteMethod',
+	'rowClick',
+	'toggleRowExpansion',
+	'handleCurrentChange',
 ]);
+// 點擊單元格一行
+const rowClick = (row: Object, column: Object) => {
+	emit('rowClick', row, column);
+};
+const toggleRowExpansion = (row: any, expanded: any) => {
+	emit('toggleRowExpansion', row);
+};
 const remoteMethod = (index: number, query: string) => {
 	emit('remoteMethod', index, query);
+};
+const handleCurrentChange = (val: any) => {
+	emit('handleCurrentChange', val);
+	// currentRow.value = val;
 };
 // 表格行样式
 const tableRowClassName = (scope: EmptyObjectType) => {
@@ -566,7 +593,7 @@ const onCheckChange = () => {
 };
 //为行设置独有key
 const selRowKey = (row: EmptyObjectType) => {
-	return row.runid || row.matNo || row.reqNo || row.repairNo || row.idleno || row.uselessno;
+	return row.runid || row.publishId || row.matNo || row.reqNo || row.repairNo || row.idleno || row.uselessno;
 };
 // 表格多选改变时，用于导出和删除
 const onSelectionChange = (val: EmptyObjectType[]) => {
@@ -582,9 +609,9 @@ const clickLink = (data: string) => {
 };
 // 删除当前项
 const onDelRow = (row: EmptyObjectType, index?: number) => {
-	ElMessageBox.confirm('確定刪除嗎?', '提示', {
-		confirmButtonText: '確 定',
-		cancelButtonText: '取 消',
+	ElMessageBox.confirm(t('message.hint.suredel'), t('message.hint.tips'), {
+		confirmButtonText: t('message.allButton.ok'),
+		cancelButtonText: t('message.allButton.cancel'),
 		type: 'warning',
 		draggable: true,
 		closeOnClickModal: false,

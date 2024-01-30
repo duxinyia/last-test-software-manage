@@ -23,10 +23,10 @@
 				:isFootBtn="isFootBtn"
 				@selectChange="onSelectChange"
 			>
-				<template #dialogTable="{ data }">
+				<template #dialogTable="{ datas }">
 					<el-form ref="tableFormRef" :model="dialogState.tableData" size="default">
 						<Table
-							v-if="data.dialog.type != 'add'"
+							v-if="datas.dialog.type != 'add'"
 							ref="dialogTableRef"
 							v-bind="dialogState.tableData"
 							class="table-dialog"
@@ -87,12 +87,14 @@ const state = reactive<TableDemoState>({
 		data: [],
 		// 表头内容（必传，注意格式）
 		header: [
-			{ key: 'projectname', colWidth: '', title: '專案名稱', type: 'text', isCheck: true },
-			{ key: 'productionlinetype', colWidth: '', title: '產線類型', type: 'text', isCheck: true },
-			{ key: 'stage', colWidth: '', title: '階段', type: 'text', isCheck: true },
-			{ key: 'describe', colWidth: '280', title: '專案描述', type: 'text', isCheck: true },
-			{ key: 'machinetypeqty', colWidth: '', title: '機台種類數量', type: 'text', isCheck: true },
-			{ key: 'stationqty', colWidth: '', title: '站位數量', type: 'text', isCheck: true },
+			{ key: 'projectname', colWidth: '', title: 'message.pages.projectName', type: 'text', isCheck: true },
+			{ key: 'projectcode', colWidth: '', title: 'message.pages.projectCode', type: 'text', isCheck: true },
+			{ key: 'programname', colWidth: '', title: 'message.pages.programName', type: 'text', isCheck: true },
+			{ key: 'productionlinetype', colWidth: '', title: 'message.pages.productionlinetype', type: 'text', isCheck: true },
+			// { key: 'stage', colWidth: '', title: '階段', type: 'text', isCheck: true },
+			{ key: 'describe', colWidth: '280', title: 'message.pages.projectDescribe', type: 'text', isCheck: true },
+			{ key: 'machinetypeqty', colWidth: '', title: 'message.pages.machineTypeQty', type: 'text', isCheck: true },
+			{ key: 'stationqty', colWidth: '', title: 'message.pages.stationQty', type: 'text', isCheck: true },
 		],
 		// 配置项（必传）
 		config: {
@@ -109,7 +111,7 @@ const state = reactive<TableDemoState>({
 			operateWidth: 220,
 			isBulkDeletionBtn: false,
 		},
-		topBtnConfig: [{ type: 'add', name: '新增專案', defaultColor: 'primary', isSure: true, disabled: true }],
+		topBtnConfig: [{ type: 'add', name: 'message.pages.addProject', defaultColor: 'primary', isSure: true, disabled: true }],
 		btnConfig: [
 			{ type: 'edit', name: 'message.allButton.editBtn', isSure: false, icon: 'ele-Edit', defaultColor: 'warning' },
 			{ type: 'del', name: 'message.allButton.deleteBtn', isSure: true, defaultColor: 'danger' },
@@ -117,11 +119,12 @@ const state = reactive<TableDemoState>({
 		// 搜索表单，动态生成（传空数组时，将不显示搜索，注意格式）
 		search: [
 			{
-				label: '專案名稱',
+				label: 'message.pages.projectName',
 				prop: 'projectName',
 				required: false,
 				type: 'input',
 			},
+			{ label: 'message.pages.projectCode', placeholder: '', prop: 'projectCode', required: false, type: 'input' },
 		],
 		searchConfig: {
 			isSearchBtn: true,
@@ -134,27 +137,22 @@ const state = reactive<TableDemoState>({
 			pageSize: 10,
 		},
 		// 打印标题
-		printName: '表格打印演示',
+		printName: '',
 		// 弹窗表单
 		dialogConfig: [
 			{
-				label: '專案名稱',
+				label: 'message.pages.projectName',
 				prop: 'projectname',
-				placeholder: '请輸入專案名稱',
+				placeholder: '',
 				required: true,
 				type: 'input',
 				standbyType: 'input',
-				xs: 24,
-				sm: 24,
-				md: 24,
-				lg: 24,
-				xl: 24,
 				isCheck: true,
 			},
 			{
-				label: '產線類型',
+				label: 'message.pages.productionlinetype',
 				prop: 'productionlinetype',
-				placeholder: '请選擇產線類型',
+				placeholder: '',
 				required: true,
 				type: 'select',
 				standbyType: 'select',
@@ -165,19 +163,37 @@ const state = reactive<TableDemoState>({
 				],
 			},
 			{
-				label: '階段',
-				prop: 'stage',
-				placeholder: '请選擇階段',
-				required: false,
-				type: 'select',
-				standbyType: 'select',
+				label: 'message.pages.projectCode',
+				prop: 'projectcode',
+				placeholder: '',
+				required: true,
+				type: 'input',
+				standbyType: 'input',
 				isCheck: true,
-				options: [],
 			},
 			{
-				label: '專案描述',
+				label: 'message.pages.programName',
+				prop: 'programname',
+				placeholder: '',
+				required: true,
+				type: 'input',
+				standbyType: 'input',
+				isCheck: true,
+			},
+			// {
+			// 	label: '階段',
+			// 	prop: 'stage',
+			// 	placeholder: '请選擇階段',
+			// 	required: false,
+			// 	type: 'select',
+			// 	standbyType: 'select',
+			// 	isCheck: true,
+			// 	options: [],
+			// },
+			{
+				label: 'message.pages.projectDescribe',
 				prop: 'describe',
-				placeholder: '請輸入專案描述',
+				placeholder: '',
 				required: true,
 				type: 'textarea',
 				standbyType: 'textarea',
@@ -199,8 +215,9 @@ const dialogState = reactive<TableDemoState>({
 		data: [],
 		// 表头内容（必传，注意格式）
 		header: [
-			{ key: 'machinetype', colWidth: '', title: '機台型號', type: 'input', isCheck: true, isRequired: false },
-			{ key: 'stationname', colWidth: '', title: '站位名稱', type: 'input', isCheck: true, isRequired: false },
+			{ key: 'stationname', colWidth: '', title: 'message.pages.stationName', type: 'input', isCheck: true, isRequired: false },
+			{ key: 'stationcode', colWidth: '', title: 'message.pages.stationCode', type: 'input', isCheck: true, isRequired: false },
+			{ key: 'machinetype', colWidth: '', title: 'message.pages.machineType', type: 'input', isCheck: true, isRequired: false },
 		],
 		// 配置项（必传）
 		config: {
@@ -217,23 +234,23 @@ const dialogState = reactive<TableDemoState>({
 			height: 300,
 			operateWidth: 220,
 		},
-		topBtnConfig: [{ type: 'add', name: '新增', defaultColor: 'primary', isSure: true, disabled: true }],
+		topBtnConfig: [{ type: 'add', name: 'message.allButton.addBtn', defaultColor: 'primary', isSure: true, disabled: true }],
 		// 给后端的数据
 		form: {},
 		// 搜索表单，动态生成（传空数组时，将不显示搜索，注意格式）
 		search: [],
 		dialogConfig: [
 			{
-				label: '機台型號',
-				prop: 'machinetype',
-				placeholder: '请輸入機台型號',
+				label: 'message.pages.stationName',
+				prop: 'stationname',
+				placeholder: '',
 				required: true,
-				type: 'select',
-				options: [],
-				loading: true,
-				filterable: true,
-				remote: true,
-				remoteShowSuffix: true,
+				type: 'input',
+				// options: [],
+				// loading: true,
+				// filterable: true,
+				// remote: true,
+				// remoteShowSuffix: true,
 				xs: 24,
 				sm: 24,
 				md: 24,
@@ -242,16 +259,29 @@ const dialogState = reactive<TableDemoState>({
 				isCheck: true,
 			},
 			{
-				label: '站位名稱',
-				prop: 'stationname',
-				placeholder: '请輸入站位名稱',
+				label: 'message.pages.stationCode',
+				prop: 'stationcode',
+				placeholder: '',
 				required: true,
-				type: 'select',
-				options: [],
-				loading: true,
-				filterable: true,
-				remote: true,
-				remoteShowSuffix: true,
+				type: 'input',
+				xs: 24,
+				sm: 24,
+				md: 24,
+				lg: 24,
+				xl: 24,
+				isCheck: true,
+			},
+			{
+				label: 'message.pages.machineType',
+				prop: 'machinetype',
+				placeholder: '',
+				required: false,
+				type: 'input',
+				// options: [],
+				// loading: true,
+				// filterable: true,
+				// remote: true,
+				// remoteShowSuffix: true,
 				xs: 24,
 				sm: 24,
 				md: 24,
@@ -271,18 +301,18 @@ const dialogState = reactive<TableDemoState>({
 // 下拉框改變
 let options: EmptyArrayType = [];
 const onSelectChange = async (val: string, prop: string, data: EmptyObjectType, flag?: number) => {
-	if (prop === 'productionlinetype') {
-		const res = await getStageQueryNoPageApi(data.productionlinetype);
-		if (flag != 1) data.stage = '';
-		options = res.data.map((item: any) => {
-			return { value: item.stage, lable: item.stage, text: item.stage, selected: false };
-		});
-		state.tableData.dialogConfig?.forEach((item) => {
-			if (item.prop === 'stage') {
-				item.options = options;
-			}
-		});
-	}
+	// if (prop === 'productionlinetype') {
+	// 	const res = await getStageQueryNoPageApi(data.productionlinetype);
+	// 	if (flag != 1) data.stage = '';
+	// 	options = res.data.map((item: any) => {
+	// 		return { value: item.stage, lable: item.stage, text: item.stage, selected: false };
+	// 	});
+	// 	state.tableData.dialogConfig?.forEach((item) => {
+	// 		if (item.prop === 'stage') {
+	// 			item.options = options;
+	// 		}
+	// 	});
+	// }
 };
 // 单元格字体颜色
 const cellStyle = ({ column }: EmptyObjectType) => {
@@ -295,7 +325,7 @@ const cellStyle = ({ column }: EmptyObjectType) => {
 const projectnameClick = (row: EmptyObjectType, column: EmptyObjectType) => {
 	if (column.property === 'projectname') {
 		changeType('detail', false);
-		projectDialogRef.value.openDialog('detail', row, '詳情');
+		projectDialogRef.value.openDialog('detail', row, 'message.pages.detail');
 		getPositionTableData(row.runid);
 	}
 };
@@ -398,13 +428,13 @@ const onSearch = (data: EmptyObjectType) => {
 };
 // 打開新增站位彈窗
 const openPositionDialog = (type: string, row: EmptyObjectType) => {
-	projectPositionDialogRef.value.openDialog(type, row, '專案站位');
+	projectPositionDialogRef.value.openDialog(type, row, 'message.pages.projectStation');
 };
 let projectId = '';
 // 打开新增編輯弹窗
 const openDialog = (type: string, row: EmptyObjectType) => {
 	changeType('add', true);
-	projectDialogRef.value.openDialog(type, row, '專案');
+	projectDialogRef.value.openDialog(type, row, 'message.pages.project');
 	if (type != 'add') {
 		projectId = row.runid;
 		getPositionTableData(row.runid);
@@ -418,14 +448,15 @@ const addPositionData = async (ruleForm: EmptyObjectType, type: string) => {
 		runId: ruleForm.runid,
 		machineType: ruleForm.machinetype,
 		stationName: ruleForm.stationname,
+		stationCode: ruleForm.stationcode,
 	};
-	const { machineType, stationName } = editData;
+	const { machineType, stationName, stationCode } = editData;
 	const res =
 		type === 'add'
-			? await postProjectAddProjectStationApi({ machineType, stationName, projectId })
+			? await postProjectAddProjectStationApi({ machineType, stationCode, stationName, projectId })
 			: await putProjectUpdateProjectStationApi(editData);
 	if (res.status) {
-		type === 'add' ? ElMessage.success(`新增成功`) : ElMessage.success(`修改成功`);
+		type === 'add' ? ElMessage.success(t(`message.hint.addSuccess`)) : ElMessage.success(t(`message.hint.modifiedSuccess`));
 		projectPositionDialogRef.value.closeDialog();
 		getPositionTableData(projectId);
 	}
@@ -440,24 +471,26 @@ const addData = async (ruleForm: EmptyObjectType, type: string) => {
 		describe: ruleForm.describe,
 		productionLineType: ruleForm.productionlinetype,
 		stage: ruleForm.stage,
+		projectCode: ruleForm.projectcode,
+		programName: ruleForm.programname,
 	};
-	const { projectName, describe, productionLineType, stage } = editData;
+	const { projectName, projectCode, programName, describe, productionLineType, stage } = editData;
 	const res =
 		type === 'add'
-			? await postProjectAddProjectApi({ projectName, describe, productionLineType, stage })
+			? await postProjectAddProjectApi({ projectName, projectCode, programName, describe, productionLineType, stage })
 			: await putProjectUpdateProjectApi(editData);
+	loadingBtn.value = false;
 	if (res.status) {
-		type === 'add' ? ElMessage.success(`新增成功`) : ElMessage.success(`修改成功`);
+		type === 'add' ? ElMessage.success(t(`message.hint.addSuccess`)) : ElMessage.success(t(`message.hint.modifiedSuccess`));
 		projectDialogRef.value.closeDialog();
 		getTableData();
 	}
-	loadingBtn.value = false;
 };
 // 表格删除当前项回调
 const onTableDelRow = async (row: EmptyObjectType, type: string) => {
 	const res = await deleteProjectDeleteProjectApi(row.runid);
 	if (res.status) {
-		ElMessage.success(`${t('message.allButton.deleteBtn')}${t('message.hint.success')}`);
+		ElMessage.success(`${t('message.allButton.deleteBtn')} ${t('message.hint.success')}`);
 		getTableData();
 	}
 };

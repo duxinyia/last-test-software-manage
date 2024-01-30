@@ -25,7 +25,7 @@
 						<el-input
 							:maxlength="val.maxlength"
 							v-model="state.form[val.prop]"
-							:placeholder="`請輸入${$t(val.label)}`"
+							:placeholder="`${$t('message.pages.pleaseEnter')} ${$t(val.label)}`"
 							clearable
 							v-if="val.type === 'input'"
 							style="width: 100%"
@@ -43,13 +43,13 @@
 							v-model="state.form[val.prop]"
 							type="daterange"
 							range-separator="-"
-							start-placeholder="開始日期"
-							end-placeholder="結束日期"
+							:start-placeholder="$t('message.pages.startDate')"
+							:end-placeholder="$t('message.pages.endDate')"
 							style="width: 100%"
 						/>
 						<el-select
 							v-model="state.form[val.prop]"
-							:placeholder="val.placeholder || `請選擇${val.label}`"
+							:placeholder="$t(val.placeholder!) || `${$t('message.pages.pleaseSelect')} ${$t(val.label)}`"
 							v-else-if="val.type === 'select'"
 							style="width: 100%"
 							@change="(vals:any) => selectHandelChange(vals,val.prop)"
@@ -108,7 +108,7 @@
 </template>
 
 <script setup lang="ts" name="makeTableDemoSearch">
-import { reactive, ref, onMounted } from 'vue';
+import { reactive, ref, onMounted, nextTick } from 'vue';
 import type { FormInstance } from 'element-plus';
 import { useI18n } from 'vue-i18n';
 
@@ -162,9 +162,11 @@ const remoteMethod = (query: string, prop?: string) => {
 };
 // 重置
 const onReset = (formEl: FormInstance | undefined) => {
-	if (!formEl) return;
-	formEl.resetFields();
-	emit('search', state.form);
+	// if (!formEl) return;
+	nextTick(() => {
+		tableSearchRef.value?.resetFields();
+	});
+	// emit('search', state.form);
 };
 // 初始化 form 字段，取自父组件 search.prop
 const initFormField = () => {
@@ -189,6 +191,7 @@ onMounted(() => {
 // 暴露变量
 defineExpose({
 	initFormField,
+	onReset,
 });
 </script>
 

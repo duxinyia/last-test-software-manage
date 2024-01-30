@@ -3,8 +3,8 @@
 		<div class="table-padding layout-padding-view layout-padding-auto">
 			<TableSearch ref="tableSearchRef" :search="state.tableData.search" @search="onSearch" :searchConfig="state.tableData.searchConfig">
 				<template #optionSearchFat="{ row }">
-					<span style="float: left">專案名：{{ row.text }}</span>
-					<span style="float: right; color: var(--el-text-color-secondary)">產線類型:{{ row.label }}</span>
+					<span style="float: left">{{ t('message.pages.projectName') }}：{{ row.text }}</span>
+					<span style="float: right; color: var(--el-text-color-secondary)">{{ t('message.pages.productionlinetype') }}：{{ row.label }}</span>
 				</template>
 			</TableSearch>
 			<Table
@@ -20,8 +20,9 @@
 				<template #slotCol="{ row }">
 					<el-popover placement="bottom-start" width="20%" trigger="hover">
 						<el-table class="popover-table" :data="row.stationMachines" style="width: 100%" stripe max-height="250">
-							<el-table-column show-overflow-tooltip align="center" prop="stationName" label="站位名稱" />
-							<el-table-column show-overflow-tooltip align="center" prop="machineType" label="機台型號" />
+							<el-table-column show-overflow-tooltip align="center" prop="stationName" :label="$t('message.pages.stationName')" />
+							<el-table-column show-overflow-tooltip align="center" prop="stationCode" :label="$t('message.pages.stationCode')" />
+							<el-table-column show-overflow-tooltip align="center" prop="machineType" :label="$t('message.pages.machineType')" />
 						</el-table>
 						<template #reference>
 							<span style="text-align: center; width: 100%; cursor: pointer"> {{ row.projectName }} </span>
@@ -41,9 +42,9 @@
 				@inputHandleChange="onInputHandleChange"
 				@newInputHandleExceed="newInputHandleExceed"
 			>
-				<template #dialogTable="{ data }">
+				<template #dialogTable="{ datas }">
 					<el-form ref="tableFormRef" :model="satusState.tableData" size="default">
-						<Table v-if="data.dialog.type === 'publish'" ref="dialogTableRef" v-bind="satusState.tableData" class="table-dialog">
+						<Table v-if="datas.dialog.type === 'publish'" ref="dialogTableRef" v-bind="satusState.tableData" class="table-dialog">
 							<template #column="{ row }">
 								<a target="_blank" href="javascript:;" style="display: block" v-for="item in row.attList" @click="clickLink(item.fileUrl)">
 									{{ item.fileName }}
@@ -53,15 +54,17 @@
 					</el-form>
 				</template>
 				<template #optionFat="{ row, items }">
-					<span v-if="items.prop === 'stationName'" style="float: left">站位：{{ row.value2 }}</span>
+					<span v-if="items.prop === 'stationName'" style="float: left">{{ t('message.pages.position') }}：{{ row.value2 }}</span>
 					<span v-if="items.prop === 'stationName'" style="float: right; color: var(--el-text-color-secondary); font-size: 13px"
-						>機台型號：{{ row.label }}</span
+						>{{ t('message.pages.stationCode') }}：{{ row.label }}</span
 					>
-					<span v-if="items.prop === 'projectId'" style="float: left">專案名：{{ row.text }}</span>
-					<span v-if="items.prop === 'projectId'" style="float: right; color: var(--el-text-color-secondary)">產線類型:{{ row.label }}</span>
+					<span v-if="items.prop === 'projectId'" style="float: left">{{ t('message.pages.projectName') }}：{{ row.text }}</span>
+					<span v-if="items.prop === 'projectId'" style="float: right; color: var(--el-text-color-secondary)"
+						>{{ t('message.pages.productionlinetype') }}:{{ row.label }}</span
+					>
 				</template>
 			</Dialog>
-			<el-dialog draggable :close-on-click-modal="false" v-model="detaildialogVisible" title="程式發佈詳情" width="45%"
+			<el-dialog draggable :close-on-click-modal="false" v-model="detaildialogVisible" :title="$t('message.pages.programReleaseDetails')" width="45%"
 				><programReleaseDetailDialog :isDialog="true" :checkNoRef="checkNoRef"
 			/></el-dialog>
 		</div>
@@ -104,12 +107,23 @@ const state = reactive<TableDemoState>({
 		data: [],
 		// 表头内容（必传，注意格式）
 		header: [
-			{ key: 'projectName', colWidth: '', title: '專案名', type: 'slot', isCheck: true },
-			{ key: 'programName', colWidth: '', title: '程式包名', type: 'text', isCheck: true },
-			{ key: 'version', colWidth: '', title: '程式版本', type: 'text', isCheck: true },
-			{ key: 'createTime', colWidth: '', title: '發佈開始時間', type: 'text', isCheck: true },
-			{ key: 'programType', colWidth: '', title: '發佈包類型', type: 'text', isCheck: true },
-			{ key: 'fileSize', colWidth: '', title: '程式包大小', type: 'text', isCheck: true },
+			{ key: 'projectName', colWidth: '', title: 'message.pages.projectName', type: 'slot', isCheck: true },
+			{ key: 'programAttName', colWidth: '', title: 'message.pages.packageName', type: 'text', isCheck: true },
+			{ key: 'version', colWidth: '', title: 'message.pages.programVersion', type: 'text', isCheck: true },
+			{ key: 'createTime', colWidth: '', title: 'message.pages.releaseTime', type: 'text', isCheck: true },
+			{
+				key: 'programType',
+				colWidth: '',
+				title: 'message.pages.releasePackageType',
+				type: 'text',
+				isCheck: true,
+				transfer: {
+					1: 'message.pages.basePackage',
+					2: 'message.pages.patchPackage',
+					3: 'message.pages.completePackage',
+				},
+			},
+			{ key: 'fileSize', colWidth: '', title: 'message.pages.packageSize', type: 'text', isCheck: true },
 			// { key: 'runStatusText', colWidth: '', title: '發佈狀態', type: 'text', isCheck: true },
 		],
 		// 配置项（必传）
@@ -124,32 +138,34 @@ const state = reactive<TableDemoState>({
 			isInlineEditing: false, //是否是行内编辑
 			isTopTool: false, //是否有表格右上角工具
 			isPage: true, //是否有分页
-			operateWidth: 320,
+			operateWidth: 350,
 			isBulkDeletionBtn: false,
 		},
-		topBtnConfig: [{ type: 'add', name: '發佈程式', defaultColor: 'primary', isSure: true, disabled: true }],
+		topBtnConfig: [{ type: 'add', name: 'message.pages.publisher', defaultColor: 'primary', isSure: true, disabled: true }],
 		btnConfig: [
-			{ type: 'signProgress', name: '簽核進度', isSure: false, defaultColor: 'warning', icon: '' },
-			{ type: 'send', name: '送簽', isSure: false, defaultColor: 'success', icon: 'ele-TopRight' },
-			{ type: 'detail', name: '詳情', isSure: false, defaultColor: 'primary', icon: 'ele-View' },
+			{ type: 'signProgress', name: 'message.pages.signingProgress', isSure: false, defaultColor: 'warning', icon: '' },
+			{ type: 'send', name: 'message.pages.send', isSure: false, defaultColor: 'success', icon: 'ele-TopRight' },
+			{ type: 'detail', name: 'message.pages.detail', isSure: false, defaultColor: 'primary', icon: 'ele-View' },
 			{ type: 'del', name: 'message.allButton.deleteBtn', isSure: true, defaultColor: 'danger' },
 		],
 		// 搜索表单，动态生成（传空数组时，将不显示搜索，注意格式）
 		search: [
-			{ label: '專案名', prop: 'projectId', required: false, type: 'select', options: [] },
+			{ label: 'message.pages.projectName', placeholder: '', prop: 'projectId', required: false, type: 'select', options: [] },
 			{
-				label: '站位名稱',
+				label: 'message.pages.stationName',
 				prop: 'stationName',
 				required: false,
 				type: 'input',
 			},
 			{
-				label: '發佈狀態',
+				label: 'message.pages.releaseStatus',
+				placeholder: '',
 				prop: 'machineType',
 				required: false,
 				type: 'select',
+				options: [],
 			},
-			{ label: '發佈時間', prop: 'publishDate', required: false, type: 'dateRange' },
+			{ label: 'message.pages.releaseTime', prop: 'publishDate', required: false, type: 'dateRange' },
 		],
 		searchConfig: {
 			isSearchBtn: true,
@@ -162,36 +178,35 @@ const state = reactive<TableDemoState>({
 			pageSize: 10,
 		},
 		// 打印标题
-		printName: '表格打印演示',
+		printName: '',
 		// 弹窗表单
 		dialogConfig: [
 			{
-				label: '專案名稱',
+				label: 'message.pages.projectName',
 				prop: 'projectId',
-				placeholder: '请選擇專案名稱',
+				placeholder: '',
 				required: true,
 				type: 'select',
 				standbyType: 'select',
 				isCheck: true,
 				options: [],
 			},
-
 			{
-				label: '發佈類型',
+				label: 'message.pages.releaseType',
 				prop: 'programType',
-				placeholder: '请選擇發佈類型',
+				placeholder: '',
 				required: true,
 				type: 'select',
 				standbyType: 'select',
 				isCheck: true,
 				options: [
-					{ value: 3, label: '完整包', text: '完整包' },
-					{ value: 2, label: '補丁包', text: '補丁包' },
-					{ value: 1, label: '基礎包', text: '基礎包' },
+					{ value: 3, label: 'message.pages.completePackage', text: 'message.pages.completePackage' },
+					{ value: 2, label: 'message.pages.patchPackage', text: 'message.pages.patchPackage' },
+					{ value: 1, label: 'message.pages.basePackage', text: 'message.pages.basePackage' },
 				],
 			},
 			{
-				label: '產線類型',
+				label: 'message.pages.productionlinetype',
 				prop: 'productionlinetype',
 				placeholder: '',
 				required: false,
@@ -200,8 +215,8 @@ const state = reactive<TableDemoState>({
 				isCheck: true,
 			},
 			{
-				label: '階段',
-				prop: 'stage',
+				label: 'message.pages.projectCode',
+				prop: 'projectCode',
 				placeholder: '',
 				required: false,
 				type: 'text',
@@ -209,9 +224,27 @@ const state = reactive<TableDemoState>({
 				isCheck: true,
 			},
 			{
-				label: '站位名稱',
+				label: 'message.pages.programName',
+				prop: 'programName',
+				placeholder: '',
+				required: false,
+				type: 'text',
+				standbyType: 'text',
+				isCheck: true,
+			},
+			{
+				label: 'message.pages.stage',
+				prop: 'stage',
+				placeholder: '',
+				required: false,
+				type: 'input',
+				standbyType: 'input',
+				isCheck: true,
+			},
+			{
+				label: 'message.pages.stationName',
 				prop: 'stationName',
-				placeholder: '请選擇站位名稱',
+				placeholder: '',
 				required: true,
 				type: 'select',
 				standbyType: 'select',
@@ -252,9 +285,9 @@ const state = reactive<TableDemoState>({
 			// },
 
 			{
-				label: '上傳程式',
+				label: 'message.pages.uploadProgram',
 				prop: 'programFilePath',
-				placeholder: '請點擊此處上傳文件',
+				placeholder: 'message.pages.pleaseClickUploadFile',
 				required: true,
 				type: 'optionFile',
 				isCheck: true,
@@ -265,9 +298,9 @@ const state = reactive<TableDemoState>({
 				xl: 24,
 			},
 			{
-				label: '程式版本',
+				label: 'message.pages.programVersion',
 				prop: 'version',
-				placeholder: '请輸入程式版本',
+				placeholder: '',
 				required: false,
 				type: 'text',
 				standbyType: 'text',
@@ -276,7 +309,7 @@ const state = reactive<TableDemoState>({
 			{
 				label: 'LWS',
 				prop: 'lwsFilePath',
-				placeholder: '請點擊此處上傳文件',
+				placeholder: 'message.pages.pleaseClickUploadFile',
 				required: true,
 				type: 'optionFile',
 				isCheck: true,
@@ -286,11 +319,10 @@ const state = reactive<TableDemoState>({
 				lg: 24,
 				xl: 24,
 			},
-
 			{
 				type: 'textarea',
 				label: 'CheckSum',
-				placeholder: '請輸入CheckSum',
+				placeholder: '',
 				prop: 'checkSum',
 				minRows: 4,
 				required: true,
@@ -303,8 +335,8 @@ const state = reactive<TableDemoState>({
 			},
 			{
 				type: 'textarea',
-				label: '更新描述',
-				placeholder: '請輸入更新描述',
+				label: 'message.pages.updateDescription',
+				placeholder: '',
 				minRows: 4,
 				prop: 'describe',
 				required: true,
@@ -324,12 +356,12 @@ const satusState = reactive<TableDemoState>({
 		data: [],
 		// 表头内容（必传，注意格式）
 		header: [
-			{ key: 'signFlowOrderUserId', colWidth: '', title: '簽核人員', type: 'text', isCheck: true },
-			{ key: 'signUserRemarks', colWidth: '', title: '簽核節點', type: 'text', isCheck: true },
-			{ key: 'updateTime', colWidth: '', title: '簽核時間', type: 'text', isCheck: true },
-			{ key: 'signFlowNodeMemo', colWidth: '', title: '簽核意見', type: 'text', isCheck: true },
-			{ key: 'programType', colWidth: '470', title: '電子文檔', type: 'slot', isCheck: true },
-			{ key: 'proxyUserId', colWidth: '', title: '代理人', type: 'text', isCheck: true },
+			{ key: 'signFlowOrderUserId', colWidth: '', title: 'message.pages.signatory', type: 'text', isCheck: true },
+			{ key: 'signUserRemarks', colWidth: '', title: 'message.pages.signingCoreNode', type: 'text', isCheck: true },
+			{ key: 'updateTime', colWidth: '', title: 'message.pages.signatureTime', type: 'text', isCheck: true },
+			{ key: 'signFlowNodeMemo', colWidth: '', title: 'message.pages.signIdea', type: 'text', isCheck: true },
+			{ key: 'programType', colWidth: '470', title: 'message.pages.electronicDocument', type: 'slot', isCheck: true },
+			{ key: 'proxyUserId', colWidth: '', title: 'message.pages.agent', type: 'text', isCheck: true },
 		],
 		// 配置项（必传）
 		config: {
@@ -363,9 +395,9 @@ const onOtherBtn = async (scope: EmptyObjectType, type: string) => {
 		checkNoRef.value = scope.row;
 		detaildialogVisible.value = true;
 	} else if (type === 'send') {
-		ElMessageBox.confirm('確定送簽嗎?', '提示', {
-			confirmButtonText: '確 定',
-			cancelButtonText: '取 消',
+		ElMessageBox.confirm(t('message.hint.signature'), t('message.hint.tips'), {
+			confirmButtonText: t('message.allButton.ok'),
+			cancelButtonText: t('message.allButton.cancel'),
 			type: 'warning',
 			draggable: true,
 			closeOnClickModal: false,
@@ -373,7 +405,7 @@ const onOtherBtn = async (scope: EmptyObjectType, type: string) => {
 			.then(async () => {
 				const res = await postPublishSubmitSignApi({ comKey: scope.row.publishId });
 				if (res.status) {
-					ElMessage.success(t('送簽成功'));
+					ElMessage.success(t('message.hint.sendSuccess'));
 					getTableData();
 				}
 			})
@@ -381,7 +413,7 @@ const onOtherBtn = async (scope: EmptyObjectType, type: string) => {
 	} else if (type === 'signProgress') {
 		satusState.tableData.config.loading = true;
 		btnType.value = 'publish';
-		stationDialogRef.value.openDialog('publish', scope.row, '程式簽核信息');
+		stationDialogRef.value.openDialog('publish', scope.row, 'message.pages.programSigningInformation');
 		const res = await getPublishGetSignFlowApi(scope.row.publishId);
 		if (res.data) {
 			res.data.forEach((item: any) => {
@@ -410,11 +442,11 @@ const onOtherBtn = async (scope: EmptyObjectType, type: string) => {
 // 初始化列表数据
 const getTableData = async () => {
 	const form = state.tableData.form;
-	const programTypeMap: EmptyObjectType = {
-		1: '基礎包',
-		2: '補丁包',
-		3: '完整包',
-	};
+	// const programTypeMap: EmptyObjectType = {
+	// 	1: '基礎包',
+	// 	2: '補丁包',
+	// 	3: '完整包',
+	// };
 	let data: EmptyObjectType = {
 		...form,
 		startTime: form.publishDate && form.publishDate[0],
@@ -424,7 +456,7 @@ const getTableData = async () => {
 	delete data.publishDate;
 	const res = await postPublishQueryPageApi(data);
 	res.data.data.forEach((item: any) => {
-		item.programType = t(programTypeMap[item.programType]);
+		// item.programType = programTypeMap[item.programType];
 		item.sendIsShow = item.delDisabled = item.signStatus === 0 ? false : true;
 		item.signProgressIsShow = !item.sendIsShow;
 	});
@@ -454,7 +486,7 @@ const onSearch = (data: EmptyObjectType) => {
 // 打开新增編輯弹窗
 const openDialog = (type: string, row: EmptyObjectType) => {
 	btnType.value = type;
-	stationDialogRef.value.openDialog(type, row, '程式發佈信息', '發佈');
+	stationDialogRef.value.openDialog(type, row, 'message.pages.programReleaseInformation', 'message.pages.publish');
 };
 const newInputHandleExceed = (uploadFile: any, prop: string, formData: EmptyObjectType) => {};
 // 文件改變
@@ -464,7 +496,7 @@ const onInputHandleChange = (uploadFile: any, prop: string, formData: EmptyObjec
 		if (formData.version && formData.version.substr(0, 1) == 'V') {
 			formData.error = 1;
 		} else {
-			ElMessage.error(`命名錯誤,請重新命名文件再上傳`);
+			ElMessage.error(t(`message.hint.rename`));
 			formData.error = 0;
 			formData.programFilePath = '';
 			formData.programFilePathfile = [];
@@ -489,8 +521,28 @@ const onSelectChange = async (val: string, prop: string, data: EmptyObjectType) 
 			}
 		});
 		const res = await getProjectQueryNoPageApi(projectName);
-		data.productionlinetype = res.data[0].productionlinetype;
-		data.stage = res.data[0].stage;
+		res.data.forEach((item: any) => {
+			if (item.projectname === projectName) {
+				data.productionlinetype = item.productionlinetype;
+				data.projectCode = item.projectcode;
+				data.programName = item.programname;
+			}
+		});
+		if (data.productionlinetype) {
+			// 階段的下拉框
+			// const res = await getStageQueryNoPageApi(data.productionlinetype);
+			// state.tableData.dialogConfig?.forEach((item) => {
+			// 	if (item.prop === 'stage') {
+			// 		item.options = res.data.map((item: any) => {
+			// 			return { value: item.stage, lable: item.stage, text: item.stage, selected: false };
+			// 		});
+			// 	}
+			// });
+		}
+
+		// data.productionlinetype = res.data[0].productionlinetype;
+		// data.stage = res.data[0].stage;
+		data.stage = '';
 		data.stationName = '';
 		getStationSelect(val);
 	}
@@ -503,6 +555,8 @@ const addData = async (ruleForm: EmptyObjectType, type: string) => {
 		productionlinetype,
 		stage,
 		programType,
+		projectCode,
+		programName,
 		// productionLineType,
 		// configInfo,
 		version,
@@ -514,13 +568,15 @@ const addData = async (ruleForm: EmptyObjectType, type: string) => {
 		stationName,
 	} = ruleForm;
 	stationName = stationName.map((item: any) => {
-		return { stationName: item.split(',')[0], machineType: item.split(',')[1] };
+		return { stationName: item.split(',')[0], stationCode: item.split(',')[1], machineType: item.split(',')[2] };
 	});
 	const getData = {
 		projectId,
 		productionlinetype,
 		stage,
 		programType,
+		projectCode,
+		programName,
 		// productionLineType,
 		// configInfo,
 		version,
@@ -532,6 +588,7 @@ const addData = async (ruleForm: EmptyObjectType, type: string) => {
 		fileSize: Number((programFilePathfile[0].size / (1024 * 1024)).toFixed(2)),
 	};
 	loadingBtn.value = true;
+	// console.log(getData);
 	const res = await postPublishAddPublishApi(getData);
 	loadingBtn.value = false;
 	if (res.status) {
@@ -542,7 +599,7 @@ const addData = async (ruleForm: EmptyObjectType, type: string) => {
 				tableSearchRef.value.initFormField();
 			}
 		});
-		ElMessage.success(`發佈成功`);
+		ElMessage.success(t(`message.hint.publishSuccess`));
 		stationDialogRef.value.closeDialog();
 		getTableData();
 	}
@@ -552,7 +609,7 @@ const onTableDelRow = async (row: EmptyObjectType, type: string) => {
 	if (row.signStatus === 0) {
 		const res = await deletePublishDeletePublishApi(row.publishId);
 		if (res.status) {
-			ElMessage.success(`${t('message.allButton.deleteBtn')}${t('message.hint.success')}`);
+			ElMessage.success(`${t('message.allButton.deleteBtn')} ${t('message.hint.success')}`);
 			getTableData();
 		}
 	}
@@ -587,9 +644,9 @@ const getStationSelect = async (val: string) => {
 	const res = await getProjectQueryNopageProjectStationApi(val);
 	let options = res.data.map((item: any) => {
 		return {
-			value: item.stationname + ',' + item.machinetype,
-			label: item.machinetype,
-			text: `站位：${item.stationname}，機台型號：${item.machinetype}`,
+			value: item.stationname + ',' + item.stationcode + ',' + item.machinetype,
+			label: item.stationcode,
+			text: `${t('message.pages.position')}：${item.stationname}，${t('message.pages.stationCode')}：${item.stationcode}`,
 			value2: item.stationname,
 		};
 	});

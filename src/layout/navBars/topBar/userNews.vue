@@ -28,7 +28,7 @@ const state = reactive({
 	newsList: [
 		{
 			label: '关于版本发布的通知',
-			value: 'Rayprus測試軟件系统，基于 vue3 + CompositionAPI + typescript + vite + element plus',
+			value: '程式發佈系统，基于 vue3 + CompositionAPI + typescript + vite + element plus',
 			time: '2023-12-20',
 		},
 		{

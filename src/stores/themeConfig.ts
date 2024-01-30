@@ -101,7 +101,7 @@ export const useThemeConfig = defineStore('themeConfig', {
 			// 是否开启水印
 			isWartermark: false,
 			// 水印文案
-			wartermarkText: 'Rayprus測試軟件系统',
+			wartermarkText: '程式發佈系统',
 
 			/**
 			 * 其它设置

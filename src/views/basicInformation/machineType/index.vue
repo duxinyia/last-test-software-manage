@@ -51,7 +51,7 @@ const state = reactive<TableDemoState>({
 		// 列表数据（必传）
 		data: [],
 		// 表头内容（必传，注意格式）
-		header: [{ key: 'machinetypename', colWidth: '', title: '型號名稱', type: 'text', isCheck: true }],
+		header: [{ key: 'machinetypename', colWidth: '', title: 'message.pages.typeName', type: 'text', isCheck: true }],
 		// 配置项（必传）
 		config: {
 			total: 0, // 列表总数
@@ -67,7 +67,7 @@ const state = reactive<TableDemoState>({
 			operateWidth: 220,
 			isBulkDeletionBtn: false,
 		},
-		topBtnConfig: [{ type: 'add', name: '新增機台型號', defaultColor: 'primary', isSure: true, disabled: true }],
+		topBtnConfig: [{ type: 'add', name: 'message.pages.addMachineType', defaultColor: 'primary', isSure: true, disabled: true }],
 		btnConfig: [
 			{ type: 'edit', name: 'message.allButton.editBtn', isSure: false, icon: 'ele-Edit', defaultColor: 'warning' },
 			{ type: 'del', name: 'message.allButton.deleteBtn', isSure: true, defaultColor: 'danger' },
@@ -75,7 +75,7 @@ const state = reactive<TableDemoState>({
 		// 搜索表单，动态生成（传空数组时，将不显示搜索，注意格式）
 		search: [
 			{
-				label: '型號名稱',
+				label: 'message.pages.typeName',
 				prop: 'machineType',
 				required: false,
 				type: 'input',
@@ -92,13 +92,13 @@ const state = reactive<TableDemoState>({
 			pageSize: 10,
 		},
 		// 打印标题
-		printName: '表格打印演示',
+		printName: '',
 		// 弹窗表单
 		dialogConfig: [
 			{
-				label: '型號名稱',
+				label: 'message.pages.typeName',
 				prop: 'machinetypename',
-				placeholder: '请輸入型號名稱',
+				placeholder: '',
 				required: true,
 				type: 'input',
 				standbyType: 'input',
@@ -135,7 +135,7 @@ const onSearch = (data: EmptyObjectType) => {
 };
 // 打开新增編輯弹窗
 const openDialog = (type: string, row: EmptyObjectType) => {
-	stationDialogRef.value.openDialog(type, row, '機台型號');
+	stationDialogRef.value.openDialog(type, row, 'message.pages.machineType');
 };
 
 // 新增数据  修改数据
@@ -147,7 +147,7 @@ const addData = async (ruleForm: EmptyObjectType, type: string) => {
 			? await postMachineTypeAddMachineTypeApi({ machineType: ruleForm.machinetypename })
 			: await putMachineTypeUpdateMachineTypeApi(editData);
 	if (res.status) {
-		type === 'add' ? ElMessage.success(`新增成功`) : ElMessage.success(`修改成功`);
+		type === 'add' ? ElMessage.success(t(`message.hint.addSuccess`)) : ElMessage.success(t(`message.hint.modifiedSuccess`));
 		stationDialogRef.value.closeDialog();
 		getTableData();
 	}
@@ -157,7 +157,7 @@ const addData = async (ruleForm: EmptyObjectType, type: string) => {
 const onTableDelRow = async (row: EmptyObjectType, type: string) => {
 	const res = await deleteMachineTypeDeleteMachineTypeApi(row.runid);
 	if (res.status) {
-		ElMessage.success(`${t('message.allButton.deleteBtn')}${t('message.hint.success')}`);
+		ElMessage.success(`${t('message.allButton.deleteBtn')} ${t('message.hint.success')}`);
 		getTableData();
 	}
 };
