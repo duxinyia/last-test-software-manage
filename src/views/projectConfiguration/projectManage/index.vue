@@ -216,7 +216,7 @@ const dialogState = reactive<TableDemoState>({
 		// 表头内容（必传，注意格式）
 		header: [
 			{ key: 'stationname', colWidth: '', title: 'message.pages.stationName', type: 'input', isCheck: true, isRequired: false },
-			{ key: 'stationcode', colWidth: '', title: 'message.pages.stationCode', type: 'input', isCheck: true, isRequired: false },
+			{ key: 'stationcode', colWidth: '', title: '機臺編號', type: 'input', isCheck: true, isRequired: false },
 			{ key: 'machinetype', colWidth: '', title: 'message.pages.machineType', type: 'input', isCheck: true, isRequired: false },
 		],
 		// 配置项（必传）
@@ -259,7 +259,7 @@ const dialogState = reactive<TableDemoState>({
 				isCheck: true,
 			},
 			{
-				label: 'message.pages.stationCode',
+				label: '機臺編號',
 				prop: 'stationcode',
 				placeholder: '',
 				required: true,

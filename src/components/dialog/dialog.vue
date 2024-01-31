@@ -502,7 +502,7 @@ const openDialog = (type: string, row?: any, title?: string, submitTxt?: string)
 		state.dialog.submitTxt = '開始上傳';
 	} else {
 		state.dialog.title = t(title!);
-		state.dialog.submitTxt = t(submitTxt!) || t('提交');
+		state.dialog.submitTxt = submitTxt ? t(submitTxt!) : t('提交');
 		nextTick(() => {
 			if (row) state.formData = JSON.parse(JSON.stringify(row));
 			dialogFormRef.value && dialogFormRef.value.resetFields();

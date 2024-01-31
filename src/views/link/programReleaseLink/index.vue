@@ -64,7 +64,7 @@ const state = reactive<TableDemoState>({
 		// 表头内容（必传，注意格式）
 		header: [
 			{ key: 'stationName', colWidth: '', title: 'message.pages.stationName', type: 'text', isCheck: true },
-			{ key: 'stationCode', colWidth: '', title: 'message.pages.stationCode', type: 'input', isCheck: true, isRequired: false },
+			{ key: 'stationCode', colWidth: '', title: '機臺編號', type: 'input', isCheck: true, isRequired: false },
 			{ key: 'machineType', colWidth: '', title: 'message.pages.machineType', type: 'text', isCheck: true },
 		],
 		// 配置项（必传）

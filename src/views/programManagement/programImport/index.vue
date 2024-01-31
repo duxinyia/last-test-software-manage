@@ -13,7 +13,20 @@
 				@pageChange="(page) => onTablePageChange(page, state.tableData, 'page')"
 				@sortHeader="onSortHeader"
 				@openAdd="openDialog"
-			/>
+			>
+				<template #slotCol="{ row }">
+					<el-popover placement="bottom-start" width="20%" trigger="hover">
+						<el-table class="popover-table" :data="row.stationMachines" style="width: 100%" stripe max-height="250">
+							<el-table-column show-overflow-tooltip align="center" prop="stationName" :label="$t('message.pages.stationName')" />
+							<el-table-column show-overflow-tooltip align="center" prop="stationCode" :label="$t('機臺編號')" />
+							<el-table-column show-overflow-tooltip align="center" prop="machineType" :label="$t('message.pages.machineType')" />
+						</el-table>
+						<template #reference>
+							<span style="text-align: center; width: 100%; cursor: pointer"> {{ row.projectName }} </span>
+						</template>
+					</el-popover>
+				</template>
+			</Table>
 			<!-- 新增编辑弹窗 -->
 			<Dialog ref="stationDialogRef" @addData="addData" :loadingBtn="loadingBtn" dialogWidth="70%" :isFootBtn="isFootBtn">
 				<template #dialogSearch="{ datas }">
@@ -103,7 +116,7 @@ const dialogType = ref('page');
 const validTime = ref('');
 const setExpandHeader = ref([
 	{ key: 'stationName', colWidth: '', title: 'message.pages.stationName', type: 'text', isCheck: true, isRequired: false },
-	{ key: 'stationCode', colWidth: '', title: 'message.pages.stationCode', type: 'text', isCheck: true, isRequired: false },
+	{ key: 'stationCode', colWidth: '', title: '機臺編號', type: 'text', isCheck: true, isRequired: false },
 	{ key: 'machineType', colWidth: '', title: '機臺類型', type: 'text', isCheck: true, isRequired: false },
 ]);
 const state = reactive<TableDemoState>({
@@ -112,7 +125,7 @@ const state = reactive<TableDemoState>({
 		data: [],
 		// 表头内容（必传，注意格式）
 		header: [
-			{ key: 'projectName', colWidth: '', title: 'message.pages.projectName', type: 'text', isCheck: true },
+			{ key: 'projectName', colWidth: '', title: 'message.pages.projectName', type: 'slot', isCheck: true },
 			{ key: 'projectCode', colWidth: '', title: 'message.pages.projectCode', type: 'text', isCheck: true },
 			{ key: 'productionLineType', colWidth: '', title: 'message.pages.productionlinetype', type: 'text', isCheck: true },
 			{ key: 'stage', colWidth: '', title: 'message.pages.stage', type: 'text', isCheck: true },
@@ -159,7 +172,7 @@ const state = reactive<TableDemoState>({
 			{ label: 'message.pages.projectName', placeholder: '', prop: 'projectName', required: false, type: 'input' },
 			{ label: 'message.pages.projectCode', placeholder: '', prop: 'projectCode', required: false, type: 'input' },
 			{ label: 'message.pages.stationName', prop: 'stationName', required: false, type: 'input' },
-			{ label: 'message.pages.stationCode', placeholder: '', prop: 'stationCode', required: false, type: 'input' },
+			{ label: '機臺編號', placeholder: '', prop: 'stationCode', required: false, type: 'input' },
 			{ label: '導入時間', prop: 'importTime', required: false, type: 'dateRange' },
 		],
 		searchConfig: {
@@ -380,5 +393,8 @@ onMounted(() => {
 			overflow: hidden;
 		}
 	}
+}
+.popover-table :deep(thead .el-table__cell) {
+	color: var(--el-text-color-primary) !important;
 }
 </style>

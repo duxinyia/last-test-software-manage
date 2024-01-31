@@ -171,7 +171,7 @@ const getStationSelect = async (val: string) => {
 		return {
 			value: item.stationname + ',' + item.machinetype,
 			label: item.machinetype,
-			text: `站位：${item.stationname}，機台型號：${item.machinetype}`,
+			text: `站位：${item.stationname}，機臺型號：${item.machinetype}`,
 			value2: item.stationname,
 		};
 	});

@@ -21,7 +21,7 @@
 					<el-popover placement="bottom-start" width="20%" trigger="hover">
 						<el-table class="popover-table" :data="row.stationMachines" style="width: 100%" stripe max-height="250">
 							<el-table-column show-overflow-tooltip align="center" prop="stationName" :label="$t('message.pages.stationName')" />
-							<el-table-column show-overflow-tooltip align="center" prop="stationCode" :label="$t('message.pages.stationCode')" />
+							<el-table-column show-overflow-tooltip align="center" prop="stationCode" :label="$t('機臺編號')" />
 							<el-table-column show-overflow-tooltip align="center" prop="machineType" :label="$t('message.pages.machineType')" />
 						</el-table>
 						<template #reference>
@@ -56,7 +56,7 @@
 				<template #optionFat="{ row, items }">
 					<span v-if="items.prop === 'stationName'" style="float: left">{{ t('message.pages.position') }}：{{ row.value2 }}</span>
 					<span v-if="items.prop === 'stationName'" style="float: right; color: var(--el-text-color-secondary); font-size: 13px"
-						>{{ t('message.pages.stationCode') }}：{{ row.label }}</span
+						>{{ t('機臺編號') }}：{{ row.label }}</span
 					>
 					<span v-if="items.prop === 'projectId'" style="float: left">{{ t('message.pages.projectName') }}：{{ row.text }}</span>
 					<span v-if="items.prop === 'projectId'" style="float: right; color: var(--el-text-color-secondary)"
@@ -157,14 +157,14 @@ const state = reactive<TableDemoState>({
 				required: false,
 				type: 'input',
 			},
-			{
-				label: 'message.pages.releaseStatus',
-				placeholder: '',
-				prop: 'machineType',
-				required: false,
-				type: 'select',
-				options: [],
-			},
+			// {
+			// 	label: 'message.pages.releaseStatus',
+			// 	placeholder: '',
+			// 	prop: 'machineType',
+			// 	required: false,
+			// 	type: 'select',
+			// 	options: [],
+			// },
 			{ label: 'message.pages.releaseTime', prop: 'publishDate', required: false, type: 'dateRange' },
 		],
 		searchConfig: {
@@ -192,6 +192,35 @@ const state = reactive<TableDemoState>({
 				options: [],
 			},
 			{
+				label: 'message.pages.projectCode',
+				prop: 'projectCode',
+				placeholder: '',
+				required: false,
+				type: 'text',
+				standbyType: 'text',
+				isCheck: true,
+			},
+
+			{
+				label: 'message.pages.productionlinetype',
+				prop: 'productionlinetype',
+				placeholder: '',
+				required: false,
+				type: 'text',
+				standbyType: 'text',
+				isCheck: true,
+			},
+
+			{
+				label: 'message.pages.programName',
+				prop: 'programName',
+				placeholder: '',
+				required: false,
+				type: 'text',
+				standbyType: 'text',
+				isCheck: true,
+			},
+			{
 				label: 'message.pages.releaseType',
 				prop: 'programType',
 				placeholder: '',
@@ -206,37 +235,10 @@ const state = reactive<TableDemoState>({
 				],
 			},
 			{
-				label: 'message.pages.productionlinetype',
-				prop: 'productionlinetype',
-				placeholder: '',
-				required: false,
-				type: 'text',
-				standbyType: 'text',
-				isCheck: true,
-			},
-			{
-				label: 'message.pages.projectCode',
-				prop: 'projectCode',
-				placeholder: '',
-				required: false,
-				type: 'text',
-				standbyType: 'text',
-				isCheck: true,
-			},
-			{
-				label: 'message.pages.programName',
-				prop: 'programName',
-				placeholder: '',
-				required: false,
-				type: 'text',
-				standbyType: 'text',
-				isCheck: true,
-			},
-			{
 				label: 'message.pages.stage',
 				prop: 'stage',
 				placeholder: '',
-				required: false,
+				required: true,
 				type: 'input',
 				standbyType: 'input',
 				isCheck: true,
@@ -646,7 +648,7 @@ const getStationSelect = async (val: string) => {
 		return {
 			value: item.stationname + ',' + item.stationcode + ',' + item.machinetype,
 			label: item.stationcode,
-			text: `${t('message.pages.position')}：${item.stationname}，${t('message.pages.stationCode')}：${item.stationcode}`,
+			text: `${t('message.pages.position')}：${item.stationname}，${t('機臺編號')}：${item.stationcode}`,
 			value2: item.stationname,
 		};
 	});

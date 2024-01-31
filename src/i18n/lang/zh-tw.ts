@@ -5,7 +5,7 @@ export default {
 		mainHead: 'Rayprus程式發佈系统',
 		basicData:'基礎資料',
 		position:'站位',
-		machineType:'機台型號',
+		machineType:'機臺型號',
 		stage:'階段',
 		projectConfiguration:'專案配置',
 		projectManagement:'專案管理',
