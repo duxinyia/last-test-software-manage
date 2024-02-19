@@ -157,7 +157,7 @@ watch(
 // 点击文件
 const clickLink = (prop: string) => {
 	// data[scope.$index][item.key + 'Link']
-	let path = prop === 'programName' ? state.tableData.form['filePath'] : state.tableData.form['lwsFilePath'];
+	let path = prop === 'programAttName' ? state.tableData.form['filePath'] : state.tableData.form['lwsFilePath'];
 	window.open(`${import.meta.env.MODE === 'development' ? import.meta.env.VITE_API_URL : window.webConfig.webApiBaseUrl}${path}`, '_blank');
 };
 // 初始化数据

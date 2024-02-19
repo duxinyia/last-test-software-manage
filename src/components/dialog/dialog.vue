@@ -661,7 +661,31 @@ const getFileData = async (uploadFile: EmptyObjectType, prop: any) => {
 
 	const uploadTypeMap: EmptyObjectType = { programFilePath: 1, lwsFilePath: 2 };
 	const res = await getUploadFileApi(uploadTypeMap[prop + ''], inputuploadForm.value.raw);
-	if (res.status) {
+	if (res.code === 203) {
+		showProgress.value = false;
+		ElMessageBox.confirm(t('程式包已上傳，是否使用上次上傳的文件'), t('message.hint.tips'), {
+			confirmButtonText: t('message.allButton.ok'),
+			cancelButtonText: t('message.allButton.cancel'),
+			type: 'warning',
+			draggable: true,
+			closeOnClickModal: false,
+		})
+			.then(async () => {
+				props.dialogConfig.forEach((v) => {
+					if (v.type === 'optionFile' && v.prop === prop) {
+						state.formData[v.prop] = uploadFile.name;
+					}
+				});
+				state.formData[prop + 'fileUrl'] = res.data;
+			})
+			.catch(() => {
+				state.formData[prop + 'fileUrl'] = '';
+				state.formData[prop + 'file'] = [];
+				state.formData[prop + ''] = '';
+				showProgress.value = false;
+				ElMessage.warning(res.message);
+			});
+	} else if (res.code !== 203 && res.status) {
 		uploadPercentage.value = 100;
 		ElMessage.success(`上傳成功`);
 		props.dialogConfig.forEach((v) => {
@@ -676,14 +700,14 @@ const getFileData = async (uploadFile: EmptyObjectType, prop: any) => {
 		state.formData[prop + 'file'] = [];
 		state.formData[prop + ''] = '';
 		showProgress.value = false;
-		ElMessageBox.confirm('上傳失敗! 請檢查此文件是否已經上傳過', '警告', {
-			type: 'error',
-			draggable: true,
-			closeOnClickModal: false,
-			showCancelButton: false,
-		})
-			.then(async () => {})
-			.catch(() => {});
+		// ElMessageBox.confirm('上傳失敗! 請檢查此文件是否已經上傳過', '警告', {
+		// 	type: 'error',
+		// 	draggable: true,
+		// 	closeOnClickModal: false,
+		// 	showCancelButton: false,
+		// })
+		// 	.then(async () => {})
+		// 	.catch(() => {});
 	}
 };
 watch(

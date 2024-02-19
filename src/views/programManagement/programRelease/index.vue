@@ -25,7 +25,7 @@
 							<el-table-column show-overflow-tooltip align="center" prop="machineType" :label="$t('message.pages.machineType')" />
 						</el-table>
 						<template #reference>
-							<span style="text-align: center; width: 100%; cursor: pointer"> {{ row.projectName }} </span>
+							<span style="text-align: center; width: 100%; cursor: pointer; color: #0047c5"> {{ row.projectName }} </span>
 						</template>
 					</el-popover>
 				</template>

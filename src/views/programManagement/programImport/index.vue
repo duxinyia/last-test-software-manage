@@ -13,6 +13,8 @@
 				@pageChange="(page) => onTablePageChange(page, state.tableData, 'page')"
 				@sortHeader="onSortHeader"
 				@openAdd="openDialog"
+				:cellStyle="cellStyle"
+				@cellclick="versionClick"
 			>
 				<template #slotCol="{ row }">
 					<el-popover placement="bottom-start" width="20%" trigger="hover">
@@ -22,7 +24,7 @@
 							<el-table-column show-overflow-tooltip align="center" prop="machineType" :label="$t('message.pages.machineType')" />
 						</el-table>
 						<template #reference>
-							<span style="text-align: center; width: 100%; cursor: pointer"> {{ row.projectName }} </span>
+							<span style="text-align: center; width: 100%; cursor: pointer; color: #0047c5"> {{ row.projectName }} </span>
 						</template>
 					</el-popover>
 				</template>
@@ -259,6 +261,26 @@ const dialogState = reactive<TableDemoState>({
 		dialogConfig: [],
 	},
 });
+// 单元格字体颜色
+const cellStyle = ({ column }: EmptyObjectType) => {
+	const property = column.property;
+	if (property === 'version') {
+		return { color: 'var(--el-color-primary)', cursor: 'pointer', 'text-decoration': 'underline' };
+	}
+};
+// 點擊版本下載文件
+const versionClick = (row: EmptyObjectType, column: EmptyObjectType) => {
+	if (column.property === 'version') {
+		if (row.filePath && row.filePath.includes('/')) {
+			window.open(
+				`${import.meta.env.MODE === 'development' ? import.meta.env.VITE_API_URL : window.webConfig.webApiBaseUrl}${row.filePath}`,
+				'_blank'
+			);
+		} else {
+			ElMessage.warning(t('暫無程式包或者程式包錯誤'));
+		}
+	}
+};
 const headerCellStyle = ({ column }: any) => {
 	let sty: EmptyObjectType = { backgroundColor: 'white', color: '#0047c5' };
 	return sty;
