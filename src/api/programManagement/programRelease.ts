@@ -15,6 +15,14 @@ export function postPublishAddPublishApi(data: Object) {
 		data: data,
 	});
 }
+// 編輯程式發佈
+export function putPublishUpdatePublishApi(data: Object) {
+	return request({
+		url: '/api/Publish/UpdatePublish',
+		method: 'PUT',
+		data: data,
+	});
+}
 // 專案下拉框
 export function getProjectQueryNoPageApi(projectName?: string) {
 	return request({

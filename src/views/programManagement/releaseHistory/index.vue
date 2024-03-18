@@ -191,6 +191,7 @@ const onExportTableData = async (row: EmptyObjectType, hearder: EmptyObjectType)
 		endTime: form.publishDate && form.publishDate[1],
 	};
 	delete data.publishDate;
+	if (Object.keys(data).length <= 2) return ElMessage.warning(t('沒有可以導出的專案'));
 	const res = await postExportPublishStationApi(data);
 	const result: any = res.data;
 	let blob = new Blob([result], {

@@ -25,10 +25,42 @@ export function putStationUpdateStationApi(data: Object) {
 	});
 }
 // 刪除站位
-export function deleteStationDeleteStationApi(runId: string) {
+export function deleteStationDeleteStationApi(stationCode: string) {
 	return request({
 		url: `/api/Station/DeleteStation`,
 		method: 'DELETE',
-    params:{runId}
+    params:{stationCode}
+	});
+}
+// 站位綁定機台
+export function postStationBindMachineApi(data: Object) {
+	return request({
+		url: '/api/Station/StationBindMachine',
+		method: 'POST',
+		data: data,
+	});
+}
+// 站位解綁機台
+export function postStationUnbindMachineApi(data: Object) {
+	return request({
+		url: '/api/Station/StationUnbindMachine',
+		method: 'POST',
+		data: data,
+	});
+}
+// 獲取未綁定的機台
+export function postStationQueryPageNotBoundMachineApi(data: Object) {
+	return request({
+		url: '/api/Station/QueryPageNotBoundMachine',
+		method: 'POST',
+    data: data,
+	});
+}
+// 獲取已綁定的機台
+export function postStationQueryPageBoundMachineApi(data: Object) {
+	return request({
+		url: '/api/Station/QueryPageBoundMachine',
+		method: 'POST',
+		data: data,
 	});
 }

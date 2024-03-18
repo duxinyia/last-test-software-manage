@@ -2,7 +2,7 @@
 	<div class="table-container">
 		<div class="table-top" v-if="config.isButton || config.isInlineEditing || config.isTopTool">
 			<!-- 新增弹窗按钮以及批量删除按钮 -->
-			<div v-if="config.isButton" class="allBtn mt20" v-for="topbtn in topBtnConfig" key="topbtn.name">
+			<div v-if="config.isButton" class="allBtn mt20" v-for="topbtn in topBtnConfig" :key="topbtn.name">
 				<el-button
 					v-if="topbtn.type === 'add'"
 					size="default"
@@ -104,7 +104,7 @@
 			:data="data"
 			:border="setBorder"
 			v-bind="$attrs"
-			:row-key="config.isSelection || config.expand ? selRowKey : ' '"
+			:row-key="selRowKey"
 			:stripe="objectSpanMethod ? false : true"
 			style="width: 100%"
 			:header-row-style="{ background: '' }"
@@ -299,7 +299,7 @@
 				</template>
 			</el-table-column>
 			<el-table-column
-				align="right"
+				align="center"
 				header-align="center"
 				:label="config.otherBtnOperate"
 				:width="config.otherBtnOperateWidth || 120"
@@ -321,15 +321,16 @@
 					<slot name="btn" :row="scope.row"></slot>
 					<template v-for="btn in btnConfig" :key="btn.type">
 						<el-button
+							style="color: #fff"
 							:disabled="scope.row[btn.type + 'Disabled']"
 							v-if="!btn.isSure && !scope.row[btn.type + 'IsShow']"
 							@click="btn.type === 'edit' ? onOpenEdit(btn.type, scope.row) : onOpenOther(scope, btn.type)"
 							:color="btn.color"
 							size="small"
-							:type="btn.defaultColor"
+							:type="btn.defaultColor || ''"
 							class="button"
 						>
-							<SvgIcon class="mr5" :name="btn.icon" />
+							<SvgIcon :class="btn.icon ? 'mr5' : ''" :name="btn.icon" />
 							{{ $t(btn.name) }}</el-button
 						>
 						<el-button
@@ -340,7 +341,7 @@
 							:color="btn.color"
 							:type="btn.defaultColor"
 							size="small"
-							><el-icon class="mr5"><ele-Delete /></el-icon>{{ $t(btn.name) }}</el-button
+							><el-icon class="btn.icon ? 'mr5' : ''"><ele-Delete /></el-icon>{{ $t(btn.name) }}</el-button
 						>
 					</template>
 				</template>
@@ -593,7 +594,8 @@ const onCheckChange = () => {
 };
 //为行设置独有key
 const selRowKey = (row: EmptyObjectType) => {
-	return row.runid || row.publishId || row.matNo || row.reqNo || row.repairNo || row.idleno || row.uselessno;
+	if (!props.config.isSelection && !props.config.expand) return;
+	return row.runid || row.publishId || row.matNo || row.reqNo || row.repairNo || row.idleno || row.uselessno || ' ';
 };
 // 表格多选改变时，用于导出和删除
 const onSelectionChange = (val: EmptyObjectType[]) => {

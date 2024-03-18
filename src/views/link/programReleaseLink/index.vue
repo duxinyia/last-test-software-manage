@@ -15,7 +15,7 @@
 						:key="val.prop"
 					>
 						<el-form-item :label="$t(val.label)" :prop="val.prop">
-							<span v-if="val.type === 'text'" style="width: 100%; font-weight: 700; color: #1890ff">
+							<span v-if="val.type === 'text'" style="width: 100%; font-weight: 700; color: #1890ff; word-break: break-all">
 								{{
 									state.tableData.form.programType && val.transfer
 										? $t(val.transfer[state.tableData.form.programType])
@@ -23,7 +23,9 @@
 								}}
 							</span>
 							<span v-if="val.type === 'link'">
-								<a target="_blank" href="javascript:;" @click="clickLink(val.prop)">{{ state.tableData.form[val.prop] }}</a>
+								<a style="word-break: break-all" target="_blank" href="javascript:;" @click="clickLink(val.prop)">{{
+									state.tableData.form[val.prop]
+								}}</a>
 							</span>
 						</el-form-item>
 					</el-col>
@@ -63,9 +65,10 @@ const state = reactive<TableDemoState>({
 		data: [],
 		// 表头内容（必传，注意格式）
 		header: [
+			// { key: 'line', colWidth: '', title: '線體', type: 'text', isCheck: true },
 			{ key: 'stationName', colWidth: '', title: 'message.pages.stationName', type: 'text', isCheck: true },
-			{ key: 'stationCode', colWidth: '', title: '機臺編號', type: 'input', isCheck: true, isRequired: false },
-			{ key: 'machineType', colWidth: '', title: 'message.pages.machineType', type: 'text', isCheck: true },
+			{ key: 'stationCode', colWidth: '', title: '站位代碼', type: 'input', isCheck: true, isRequired: false },
+			// { key: 'machineType', colWidth: '', title: 'message.pages.machineType', type: 'text', isCheck: true },
 		],
 		// 配置项（必传）
 		config: {
@@ -136,7 +139,31 @@ const state = reactive<TableDemoState>({
 			{ type: 'text', label: 'message.pages.releaseTime', placeholder: '', prop: 'createTime', required: false },
 			{ type: 'link', label: 'lws', placeholder: '', prop: 'lwsFileName', required: false, xs: 24, sm: 24, md: 24, lg: 24, xl: 24 },
 			{ type: 'text', label: 'message.pages.publishers', placeholder: '', prop: 'creator', required: false },
-			{ type: 'text', label: 'message.pages.releaseStatus', placeholder: '', prop: 'runStatusText', required: false },
+			{
+				type: 'text',
+				label: 'CheckSum',
+				placeholder: '',
+				prop: 'checksum',
+				required: false,
+				xs: 24,
+				sm: 24,
+				md: 24,
+				lg: 24,
+				xl: 24,
+			},
+			{
+				type: 'text',
+				label: '更新描述',
+				placeholder: '',
+				prop: 'describe',
+				required: false,
+				xs: 24,
+				sm: 24,
+				md: 24,
+				lg: 24,
+				xl: 24,
+			},
+			// { type: 'text', label: 'message.pages.releaseStatus', placeholder: '', prop: 'runStatusText', required: false },
 			// { type: 'link', label: '下載程式包', placeholder: '', prop: 'filePath', required: false, xs: 24, sm: 24, md: 24, lg: 24, xl: 24 },
 		],
 		dialogConfig: [],

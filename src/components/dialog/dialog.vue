@@ -1,6 +1,13 @@
 <template>
 	<div class="system-menu-dialog-container">
-		<el-dialog draggable :close-on-click-modal="false" :title="state.dialog.title" v-model="state.dialog.isShowDialog" :width="dialogWidth">
+		<el-dialog
+			destroy-on-close
+			draggable
+			:close-on-click-modal="false"
+			:title="state.dialog.title"
+			v-model="state.dialog.isShowDialog"
+			:width="dialogWidth"
+		>
 			<slot name="dialogSearch" :datas="state"></slot>
 			<el-form v-if="state.dialog.type !== 'imp'" ref="dialogFormRef" :model="state.formData" size="default" :label-width="labelWidth || 'auto'">
 				<el-row :gutter="35">
@@ -463,7 +470,11 @@ const openDialog = (type: string, row?: any, title?: string, submitTxt?: string)
 	if (type === 'add') {
 		state.dialog.isdisable = false;
 		state.dialog.title = t('message.allButton.addBtn') + ' ' + t(title!) || t('message.allButton.addBtn');
-		state.dialog.submitTxt = t('message.allButton.addSubmit') || t(submitTxt!);
+		if (submitTxt) {
+			state.dialog.submitTxt = t(submitTxt);
+		} else {
+			state.dialog.submitTxt = t('message.allButton.addSubmit');
+		}
 		// 清空表单，此项需加表单验证才能使用
 		nextTick(() => {
 			state.formData = {};
@@ -475,7 +486,7 @@ const openDialog = (type: string, row?: any, title?: string, submitTxt?: string)
 			// 	imagefileList.value = [];
 			// 	imageUrl.value = '';
 			// }
-			dialogFormRef.value.resetFields();
+			dialogFormRef.value?.resetFields();
 		});
 	} else if (type === 'edit') {
 		nextTick(() => {
@@ -629,6 +640,12 @@ const newInputHandleExceed: UploadProps['onExceed'] = (files, prop) => {
 	const file = files[0] as UploadRawFile;
 	file.uid = genFileId();
 	upload_list[0]!.handleStart(file);
+	emit('inputHandleChange', files[0], prop, state.formData, dialogFormRef.value);
+	const props = prop + '';
+	if (props == 'programFilePath' && state.formData.error === 0) {
+		flag = true;
+		return;
+	}
 	getFileData(files[0], prop);
 	emit('newInputHandleExceed', files, prop, state.formData);
 	flag = true;

@@ -19,7 +19,7 @@
 				@addData="addData"
 				:loadingBtn="loadingBtn"
 				dialogWidth="30%"
-				:isFootBtn="isFootBtn"
+				:isFootBtn="true"
 			>
 			</Dialog>
 			<!-- 綁定彈窗 -->
@@ -41,20 +41,23 @@
 	</div>
 </template>
 
-<script setup lang="ts" name="position">
+<script setup lang="ts" name="lines">
 import { defineAsyncComponent, reactive, ref, onMounted, computed, watch, nextTick } from 'vue';
 import { ElMessage, ElMessageBox, FormInstance } from 'element-plus';
 import { useI18n } from 'vue-i18n';
+
 import {
-	postStationQueryPageApi,
-	postStationAddStationApi,
-	putStationUpdateStationApi,
-	deleteStationDeleteStationApi,
-	postStationQueryPageBoundMachineApi,
-	postStationQueryPageNotBoundMachineApi,
-	postStationBindMachineApi,
-	postStationUnbindMachineApi,
-} from '/@/api/basicInformation/position';
+	postLineQueryPageApi,
+	postLineAddLineApi,
+	putLineUpdateLineApi,
+	deleteLineDeleteLineApi,
+	postLineBindStationApi,
+	getLineGetNotBoundStationApi,
+	postLineQueryPageNotBoundStationApi,
+	postLineQueryPageBoundStationApi,
+	postLineUnBindStationApi,
+} from '/@/api/basicInformation/lines';
+import { postStationQueryPageApi } from '/@/api/basicInformation/position';
 // 引入组件
 const Table = defineAsyncComponent(() => import('/@/components/table/index.vue'));
 const TableSearch = defineAsyncComponent(() => import('/@/components/search/search.vue'));
@@ -73,8 +76,8 @@ const state = reactive<TableDemoState>({
 		data: [],
 		// 表头内容（必传，注意格式）
 		header: [
-			{ key: 'stationname', colWidth: '', title: 'message.pages.stationName', type: 'text', isCheck: true },
-			{ key: 'stationcode', colWidth: '', title: 'message.pages.stationCode', type: 'text', isCheck: true },
+			{ key: 'line', colWidth: '', title: '線體名稱', type: 'text', isCheck: true },
+			{ key: 'linecode', colWidth: '', title: '線體代碼', type: 'text', isCheck: true },
 		],
 		// 配置项（必传）
 		config: {
@@ -91,27 +94,21 @@ const state = reactive<TableDemoState>({
 			operateWidth: 400,
 			isBulkDeletionBtn: false,
 		},
-		topBtnConfig: [{ type: 'add', name: 'message.pages.addStation', defaultColor: 'primary', isSure: true, disabled: true }],
+		topBtnConfig: [{ type: 'add', name: '新增線體', defaultColor: 'primary', isSure: true, disabled: true }],
 		btnConfig: [
-			{ type: 'bind', name: '綁定機台', isSure: false, icon: '', defaultColor: 'success' },
-			{ type: 'unbind', name: '解綁機台', isSure: false, icon: '', color: '#dc362e' },
+			{ type: 'bind', name: '綁定站位', isSure: false, icon: '', defaultColor: 'success' },
+			{ type: 'unbind', name: '解綁站位', isSure: false, icon: '', color: '#dc362e' },
 			{ type: 'edit', name: 'message.allButton.editBtn', isSure: false, icon: 'ele-Edit', defaultColor: 'warning' },
 			{ type: 'del', name: 'message.allButton.deleteBtn', isSure: true, defaultColor: 'danger' },
 		],
 		// 搜索表单，动态生成（传空数组时，将不显示搜索，注意格式）
 		search: [
 			{
-				label: 'message.pages.stationName',
-				prop: 'stationName',
+				label: '線體名稱',
+				prop: 'line',
 				required: false,
 				type: 'input',
 			},
-			// {
-			// 	label: 'message.pages.stationCode',
-			// 	prop: 'stationCode',
-			// 	required: false,
-			// 	type: 'input',
-			// },
 		],
 		searchConfig: {
 			isSearchBtn: true,
@@ -128,8 +125,8 @@ const state = reactive<TableDemoState>({
 		// 弹窗表单
 		dialogConfig: [
 			{
-				label: 'message.pages.stationName',
-				prop: 'stationname',
+				label: '線體名稱',
+				prop: 'line',
 				placeholder: '',
 				required: true,
 				type: 'input',
@@ -142,8 +139,8 @@ const state = reactive<TableDemoState>({
 				isCheck: true,
 			},
 			{
-				label: 'message.pages.stationCode',
-				prop: 'stationcode',
+				label: '線體代碼',
+				prop: 'linecode',
 				placeholder: '',
 				required: true,
 				type: 'input',
@@ -164,8 +161,8 @@ const dialogState = reactive<TableDemoState>({
 		data: [],
 		// 表头内容（必传，注意格式）
 		header: [
-			{ key: 'machineno', colWidth: '', title: '機臺編號', type: 'text', isCheck: true },
-			{ key: 'machinetype', colWidth: '', title: '機臺型號', type: 'text', isCheck: true },
+			{ key: 'stationname', colWidth: '', title: '站位名稱', type: 'text', isCheck: true },
+			{ key: 'stationcode', colWidth: '', title: '站位代碼', type: 'text', isCheck: true },
 		],
 		// 配置项（必传）
 		config: {
@@ -203,6 +200,20 @@ const dialogState = reactive<TableDemoState>({
 		dialogConfig: [],
 	},
 });
+// 得到未綁定或者已綁定站位 unbind:點擊了解綁按鈕拿到已綁定的站位
+const getStationData = async (type: string) => {
+	let data = {
+		lineCode: currentDilaoglineCode,
+		page: dialogState.tableData.page,
+	};
+	const res =
+		type === 'unbind'
+			? await postLineQueryPageBoundStationApi(data)
+			: await postLineQueryPageNotBoundStationApi({ page: dialogState.tableData.page });
+	dialogState.tableData.data = res.data.data;
+	dialogState.tableData.config.total = res.data.total;
+	dialogState.tableData.config.loading = false;
+};
 // 初始化列表数据
 const getTableData = async () => {
 	state.tableData.config.loading = true;
@@ -211,37 +222,33 @@ const getTableData = async () => {
 		...form,
 		page: state.tableData.page,
 	};
-	const res = await postStationQueryPageApi(data);
+	const res = await postLineQueryPageApi(data);
 	state.tableData.data = res.data.data;
 	state.tableData.config.total = res.data.total;
 	if (res.status) {
 		state.tableData.config.loading = false;
 	}
 };
-// 得到未綁定或者已綁定機台 unbind:點擊了解綁按鈕拿到已綁定的機台
-const getMachineData = async (type: string) => {
-	let data = {
-		stationId: currentDilaogstationId,
-		page: dialogState.tableData.page,
-	};
-	const res =
-		type === 'unbind'
-			? await postStationQueryPageBoundMachineApi(data)
-			: await postStationQueryPageNotBoundMachineApi({ page: dialogState.tableData.page });
-	dialogState.tableData.data = res.data.data;
-	dialogState.tableData.config.total = res.data.total;
-	dialogState.tableData.config.loading = false;
+
+// 搜索点击时表单回调
+const onSearch = (data: EmptyObjectType) => {
+	state.tableData.form = Object.assign({}, state.tableData.form, { ...data });
+	tableRef.value?.pageReset();
 };
-let currentDilaogstationId = '';
+// 打开新增編輯弹窗
+const openDialog = (type: string, row: EmptyObjectType) => {
+	stationDialogRef.value.openDialog(type, row, 'message.pages.line');
+};
+let currentDilaoglineCode = '';
 // 打開綁定彈窗
 const openBindDialog = (scope: EmptyObjectType, type: string) => {
 	dialogState.tableData.data = [];
 	dialogState.tableData.config.loading = true;
 	selectList.value = [];
-	bindDialogRef.value.openDialog(type, scope.row, type === 'unbind' ? '解除機臺' : '綁定機臺', '綁定');
-	currentDilaogstationId = scope.row.runid;
+	bindDialogRef.value.openDialog(type, scope.row, type === 'unbind' ? '解除站位' : '綁定站位', '綁定');
+	currentDilaoglineCode = scope.row.linecode;
 	changeDialogConfig(type);
-	getMachineData(type);
+	getStationData(type);
 };
 const changeDialogConfig = (type: string) => {
 	isFootBtn.value = type === 'unbind' ? false : true;
@@ -263,24 +270,25 @@ const onUnBind = async (scope: EmptyObjectType, type: string) => {
 	})
 		.then(async () => {
 			const rows = scope.row;
-			let res = await postStationUnbindMachineApi({ stationId: rows.stationid, machineId: rows.runid });
+			let res = await postLineUnBindStationApi({ lineCode: rows.linecode, stationId: rows.runid });
 			if (res.status) {
 				ElMessage.success('解綁成功');
-				getMachineData('unbind');
+				getStationData('unbind');
 			}
 		})
 		.catch(() => {});
 };
+
 // 綁定
 const onBind = async () => {
 	let data = selectList.value;
-	if (data.length <= 0) return ElMessage.warning(t('請選擇要綁定的機臺'));
-	let machineIdList: EmptyArrayType = [];
+	if (data.length <= 0) return ElMessage.warning(t('請選擇要綁定的站位'));
+	let stationIdList: EmptyArrayType = [];
 	data.forEach((item) => {
-		machineIdList.push(item.runid);
+		stationIdList.push(item.runid);
 	});
 	loadingBtn.value = true;
-	let res = await postStationBindMachineApi({ stationId: currentDilaogstationId, machineIdList });
+	let res = await postLineBindStationApi({ lineCode: currentDilaoglineCode, stationIdList });
 	if (res.status) {
 		ElMessage.success('綁定成功');
 		bindDialogRef.value.closeDialog();
@@ -289,27 +297,11 @@ const onBind = async () => {
 	loadingBtn.value = false;
 };
 
-// 搜索点击时表单回调
-const onSearch = (data: EmptyObjectType) => {
-	state.tableData.form = Object.assign({}, state.tableData.form, { ...data });
-	tableRef.value?.pageReset();
-};
-// 打开新增編輯弹窗
-const openDialog = (type: string, row: EmptyObjectType) => {
-	stationDialogRef.value.openDialog(type, row, 'message.pages.position');
-	const stationCodedialogConfig = state.tableData.dialogConfig![1];
-	stationCodedialogConfig.type = type === 'edit' ? 'text' : 'input';
-	stationCodedialogConfig.required = type === 'edit' ? false : true;
-};
-
 // 新增数据  修改数据
 const addData = async (ruleForm: EmptyObjectType, type: string) => {
 	loadingBtn.value = true;
-	const editData = { stationName: ruleForm.stationname, stationCode: ruleForm.stationcode };
-	const res =
-		type === 'add'
-			? await postStationAddStationApi({ stationName: ruleForm.stationname, stationCode: ruleForm.stationcode })
-			: await putStationUpdateStationApi(editData);
+	const editData = { runId: ruleForm.runid, line: ruleForm.line, lineCode: ruleForm.linecode };
+	const res = type === 'add' ? await postLineAddLineApi({ line: ruleForm.line, lineCode: ruleForm.linecode }) : await putLineUpdateLineApi(editData);
 	if (res.status) {
 		type === 'add' ? ElMessage.success(t(`message.hint.addSuccess`)) : ElMessage.success(t(`message.hint.modifiedSuccess`));
 		stationDialogRef.value.closeDialog();
@@ -319,7 +311,7 @@ const addData = async (ruleForm: EmptyObjectType, type: string) => {
 };
 // 表格删除当前项回调
 const onTableDelRow = async (row: EmptyObjectType, type: string) => {
-	const res = await deleteStationDeleteStationApi(row.stationcode);
+	const res = await deleteLineDeleteLineApi(row.runid);
 	if (res.status) {
 		ElMessage.success(`${t('message.allButton.deleteBtn')} ${t('message.hint.success')}`);
 		getTableData();

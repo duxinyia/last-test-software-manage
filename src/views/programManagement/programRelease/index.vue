@@ -1,7 +1,13 @@
 <template>
 	<div class="table-container layout-padding">
 		<div class="table-padding layout-padding-view layout-padding-auto">
-			<TableSearch ref="tableSearchRef" :search="state.tableData.search" @search="onSearch" :searchConfig="state.tableData.searchConfig">
+			<TableSearch
+				ref="tableSearchRef"
+				:search="state.tableData.search"
+				@search="onSearch"
+				:searchConfig="state.tableData.searchConfig"
+				@remoteMethod="((query: string, form: EmptyObjectType)=>remoteMethod(query,form,1))"
+			>
 				<template #optionSearchFat="{ row }">
 					<span style="float: left">{{ t('message.pages.projectName') }}：{{ row.text }}</span>
 					<span style="float: right; color: var(--el-text-color-secondary)">{{ t('message.pages.productionlinetype') }}：{{ row.label }}</span>
@@ -16,13 +22,15 @@
 				@sortHeader="onSortHeader"
 				@openAdd="openDialog"
 				@onOpenOtherDialog="onOtherBtn"
+				@importTable="onExportTableData"
 			>
 				<template #slotCol="{ row }">
 					<el-popover placement="bottom-start" width="20%" trigger="hover">
 						<el-table class="popover-table" :data="row.stationMachines" style="width: 100%" stripe max-height="250">
+							<!-- <el-table-column show-overflow-tooltip align="center" prop="line" :label="$t('線體')" /> -->
 							<el-table-column show-overflow-tooltip align="center" prop="stationName" :label="$t('message.pages.stationName')" />
-							<el-table-column show-overflow-tooltip align="center" prop="stationCode" :label="$t('機臺編號')" />
-							<el-table-column show-overflow-tooltip align="center" prop="machineType" :label="$t('message.pages.machineType')" />
+							<el-table-column show-overflow-tooltip align="center" prop="stationCode" :label="$t('站位代碼')" />
+							<!-- <el-table-column show-overflow-tooltip align="center" prop="machineType" :label="$t('message.pages.machineType')" /> -->
 						</el-table>
 						<template #reference>
 							<span style="text-align: center; width: 100%; cursor: pointer; color: #0047c5"> {{ row.projectName }} </span>
@@ -41,6 +49,8 @@
 				@selectChange="onSelectChange"
 				@inputHandleChange="onInputHandleChange"
 				@newInputHandleExceed="newInputHandleExceed"
+				@remoteMethod="((query: string, form: EmptyObjectType)=>remoteMethod(query,form,2))"
+				@editDialog="openEditDialog"
 			>
 				<template #dialogTable="{ datas }">
 					<el-form ref="tableFormRef" :model="satusState.tableData" size="default">
@@ -54,16 +64,19 @@
 					</el-form>
 				</template>
 				<template #optionFat="{ row, items }">
-					<span v-if="items.prop === 'stationName'" style="float: left">{{ t('message.pages.position') }}：{{ row.value2 }}</span>
-					<span v-if="items.prop === 'stationName'" style="float: right; color: var(--el-text-color-secondary); font-size: 13px"
-						>{{ t('機臺編號') }}：{{ row.label }}</span
-					>
+					<div v-if="items.prop === 'stationName'" style="display: flex; justify-content: space-between">
+						<!-- <span style="">{{ t('線體') }}：{{ row.value3 }}</span> -->
+						<span style="">{{ t('message.pages.position') }}：{{ row.value2 }}</span>
+						<span style="color: var(--el-text-color-secondary); font-size: 13px">{{ t('站位代碼') }}：{{ row.label }}</span>
+					</div>
+
 					<span v-if="items.prop === 'projectId'" style="float: left">{{ t('message.pages.projectName') }}：{{ row.text }}</span>
 					<span v-if="items.prop === 'projectId'" style="float: right; color: var(--el-text-color-secondary)"
 						>{{ t('message.pages.productionlinetype') }}:{{ row.label }}</span
 					>
 				</template>
 			</Dialog>
+			<!-- 詳情彈窗 -->
 			<el-dialog draggable :close-on-click-modal="false" v-model="detaildialogVisible" :title="$t('message.pages.programReleaseDetails')" width="45%"
 				><programReleaseDetailDialog :isDialog="true" :checkNoRef="checkNoRef"
 			/></el-dialog>
@@ -83,6 +96,7 @@ import {
 	postPublishAddPublishApi,
 	postPublishQueryPageApi,
 	postPublishSubmitSignApi,
+	putPublishUpdatePublishApi,
 } from '/@/api/programManagement/programRelease';
 import { getStageQueryNoPageApi } from '/@/api/projectConfiguration/projectManage';
 // 引入组件
@@ -107,7 +121,9 @@ const state = reactive<TableDemoState>({
 		data: [],
 		// 表头内容（必传，注意格式）
 		header: [
-			{ key: 'projectName', colWidth: '', title: 'message.pages.projectName', type: 'slot', isCheck: true },
+			{ key: 'projectName', colWidth: '', title: 'message.pages.projectName', type: 'text', isCheck: true },
+			{ key: 'productionLineType', colWidth: '', title: '產線類型', type: 'text', isCheck: true },
+			{ key: 'stage', colWidth: '', title: '階段', type: 'text', isCheck: true },
 			{ key: 'programAttName', colWidth: '', title: 'message.pages.packageName', type: 'text', isCheck: true },
 			{ key: 'version', colWidth: '', title: 'message.pages.programVersion', type: 'text', isCheck: true },
 			{ key: 'createTime', colWidth: '', title: 'message.pages.releaseTime', type: 'text', isCheck: true },
@@ -124,6 +140,21 @@ const state = reactive<TableDemoState>({
 				},
 			},
 			{ key: 'fileSize', colWidth: '', title: 'message.pages.packageSize', type: 'text', isCheck: true },
+			{ key: 'checksum', colWidth: '', title: 'CheckSum', type: 'text', isCheck: false },
+			{ key: 'describe', colWidth: '', title: '更新描述', type: 'text', isCheck: false },
+			{
+				key: 'signStatus',
+				colWidth: '',
+				title: '當前狀態',
+				type: 'text',
+				isCheck: true,
+				transfer: {
+					0: '未簽核',
+					1: '簽核中',
+					2: '已簽核',
+					4: '已駁回',
+				},
+			},
 			// { key: 'runStatusText', colWidth: '', title: '發佈狀態', type: 'text', isCheck: true },
 		],
 		// 配置项（必传）
@@ -136,21 +167,36 @@ const state = reactive<TableDemoState>({
 			isOperate: true, // 是否显示表格操作栏
 			isButton: true, //是否显示表格上面的新增删除按钮
 			isInlineEditing: false, //是否是行内编辑
-			isTopTool: false, //是否有表格右上角工具
+			isTopTool: true, //是否有表格右上角工具
 			isPage: true, //是否有分页
 			operateWidth: 350,
 			isBulkDeletionBtn: false,
+			exportIcon: true, //是否有导出icon(导出功能)
 		},
 		topBtnConfig: [{ type: 'add', name: 'message.pages.publisher', defaultColor: 'primary', isSure: true, disabled: true }],
 		btnConfig: [
-			{ type: 'signProgress', name: 'message.pages.signingProgress', isSure: false, defaultColor: 'warning', icon: '' },
+			{ type: 'signProgress', name: '已簽核', isSure: false, color: '#00aa59', icon: '' },
+			{ type: 'signing', name: '簽核中', isSure: false, color: '#e6a23c', icon: '' },
+			{ type: 'rejected', name: '已駁回', isSure: false, color: '#ff0000', icon: '' },
 			{ type: 'send', name: 'message.pages.send', isSure: false, defaultColor: 'success', icon: 'ele-TopRight' },
 			{ type: 'detail', name: 'message.pages.detail', isSure: false, defaultColor: 'primary', icon: 'ele-View' },
+			{ type: 'edit', name: '编辑', isSure: false, color: '#438df5', icon: '' },
 			{ type: 'del', name: 'message.allButton.deleteBtn', isSure: true, defaultColor: 'danger' },
 		],
 		// 搜索表单，动态生成（传空数组时，将不显示搜索，注意格式）
 		search: [
-			{ label: 'message.pages.projectName', placeholder: '', prop: 'projectId', required: false, type: 'select', options: [] },
+			{
+				label: 'message.pages.projectName',
+				prop: 'projectId',
+				required: false,
+				type: 'select',
+				placeholder: '請輸入選擇專案名稱',
+				options: [],
+				loading: false,
+				filterable: true,
+				remote: true,
+				remoteShowSuffix: true,
+			},
 			{
 				label: 'message.pages.stationName',
 				prop: 'stationName',
@@ -184,12 +230,16 @@ const state = reactive<TableDemoState>({
 			{
 				label: 'message.pages.projectName',
 				prop: 'projectId',
-				placeholder: '',
+				placeholder: '請輸入選擇專案名稱',
 				required: true,
 				type: 'select',
 				standbyType: 'select',
+				options: <any>[],
+				loading: false,
+				filterable: true,
+				remote: true,
 				isCheck: true,
-				options: [],
+				remoteShowSuffix: true,
 			},
 			{
 				label: 'message.pages.projectCode',
@@ -203,7 +253,7 @@ const state = reactive<TableDemoState>({
 
 			{
 				label: 'message.pages.productionlinetype',
-				prop: 'productionlinetype',
+				prop: 'productionLineType',
 				placeholder: '',
 				required: false,
 				type: 'text',
@@ -244,7 +294,7 @@ const state = reactive<TableDemoState>({
 				isCheck: true,
 			},
 			{
-				label: 'message.pages.stationName',
+				label: '發佈站位',
 				prop: 'stationName',
 				placeholder: '',
 				required: true,
@@ -325,7 +375,7 @@ const state = reactive<TableDemoState>({
 				type: 'textarea',
 				label: 'CheckSum',
 				placeholder: '',
-				prop: 'checkSum',
+				prop: 'checksum',
 				minRows: 4,
 				required: true,
 				isCheck: true,
@@ -391,7 +441,11 @@ const satusState = reactive<TableDemoState>({
 		},
 	},
 });
-// 點擊詳情或者送簽按鈕
+// 導出
+const onExportTableData = async (row: EmptyObjectType, hearder: EmptyObjectType) => {
+	console.log(row);
+};
+// 點擊詳情或者送簽按鈕或者已簽核和簽核中按鈕
 const onOtherBtn = async (scope: EmptyObjectType, type: string) => {
 	if (type === 'detail') {
 		checkNoRef.value = scope.row;
@@ -412,7 +466,7 @@ const onOtherBtn = async (scope: EmptyObjectType, type: string) => {
 				}
 			})
 			.catch(() => {});
-	} else if (type === 'signProgress') {
+	} else if (type === 'signProgress' || type === 'signing' || type === 'rejected') {
 		satusState.tableData.config.loading = true;
 		btnType.value = 'publish';
 		stationDialogRef.value.openDialog('publish', scope.row, 'message.pages.programSigningInformation');
@@ -459,8 +513,24 @@ const getTableData = async () => {
 	const res = await postPublishQueryPageApi(data);
 	res.data.data.forEach((item: any) => {
 		// item.programType = programTypeMap[item.programType];
-		item.sendIsShow = item.delDisabled = item.signStatus === 0 ? false : true;
-		item.signProgressIsShow = !item.sendIsShow;
+		// item.sendIsShow = item.delDisabled = item.signStatus === 0 ? false : true;
+		item.delDisabled = item.signStatus === 0 ? false : true;
+		if (item.signStatus === 1) {
+			// 簽核中
+			item.signingIsShow = false;
+			item.editIsShow = item.rejectedIsShow = item.sendIsShow = item.signProgressIsShow = true;
+		} else if (item.signStatus === 2) {
+			// 已簽核
+			item.editIsShow = item.rejectedIsShow = item.sendIsShow = item.signingIsShow = true;
+			item.signProgressIsShow = false;
+		} else if (item.signStatus === 0) {
+			// 未簽核
+			item.rejectedIsShow = item.signProgressIsShow = item.signingIsShow = true;
+			item.editIsShow = item.sendIsShow = false;
+		} else if (item.signStatus === 4) {
+			item.sendIsShow = item.signProgressIsShow = item.signingIsShow = true;
+			item.editIsShow = item.rejectedIsShow = false;
+		}
 	});
 	state.tableData.data = res.data.data;
 	state.tableData.config.total = res.data.total;
@@ -480,6 +550,40 @@ const clickLink = (row: string) => {
 // 	return row.programType;
 // }
 // };
+// let options: EmptyArrayType = [];
+let options: EmptyArrayType = [];
+// 專案名稱下拉
+const remoteMethod = (query: string, form: EmptyObjectType, n: number) => {
+	if (query) {
+		// 專案下拉
+		state.tableData.search[0].loading = true;
+		state.tableData.dialogConfig![0].loading = true;
+		setTimeout(async () => {
+			const res = await getProjectQueryNoPageApi(query);
+			state.tableData.search[0].loading = false;
+			state.tableData.dialogConfig![0].loading = false;
+			options = res.data.map((item: EmptyObjectType) => {
+				return { value: `${item.runid}`, label: `${item.productionlinetype}`, text: `${item.projectname}`, selected: false };
+			});
+			state.tableData.search[0].options = options;
+			state.tableData.dialogConfig![0].options = options;
+			const runids: EmptyArrayType = [];
+			res.data.forEach((item: any) => {
+				runids.push(item.projectname);
+			});
+			if (res.data.length === 1 && runids.includes(query) && query === res.data[0].programname) {
+				form.projectId = res.data[0].runid;
+				if (n === 2) {
+					onSelectChange(form.projectId, 'projectId', form);
+				}
+			}
+		}, 500);
+	}
+	// else {
+	// 	state.tableData.search[0].options = [];
+	// 	state.tableData.dialogConfig![0].options = [];
+	// }
+};
 // 搜索点击时表单回调
 const onSearch = (data: EmptyObjectType) => {
 	state.tableData.form = Object.assign({}, state.tableData.form, { ...data });
@@ -487,8 +591,25 @@ const onSearch = (data: EmptyObjectType) => {
 };
 // 打开新增編輯弹窗
 const openDialog = (type: string, row: EmptyObjectType) => {
+	state.tableData.dialogConfig![0].type = type === 'edit' ? 'text' : 'select';
 	btnType.value = type;
 	stationDialogRef.value.openDialog(type, row, 'message.pages.programReleaseInformation', 'message.pages.publish');
+};
+// 编辑弹窗处理
+const openEditDialog = (formData: EmptyObjectType) => {
+	// projectId id存起来
+	let id = formData.projectId;
+	// 展示专案名称
+	formData.projectId = formData.projectName;
+	formData.stationName = formData.stationMachines.map((item: any) => {
+		return item.stationName + ',' + item.stationCode + ',' + item.machineType;
+	});
+	// 调站位接口
+	getStationSelect(id);
+	formData.programFilePath = formData.programAttName;
+	formData.lwsFilePathfileUrl = formData.lwsFilePath;
+	formData.lwsFilePath = formData.lwsFileName;
+	formData.programFilePathfileUrl = formData.filePath;
 };
 const newInputHandleExceed = (uploadFile: any, prop: string, formData: EmptyObjectType) => {};
 // 文件改變
@@ -503,6 +624,7 @@ const onInputHandleChange = (uploadFile: any, prop: string, formData: EmptyObjec
 			formData.programFilePath = '';
 			formData.programFilePathfile = [];
 			formData.programFilePathfileUrl = '';
+			formData.version = '';
 		}
 	}
 };
@@ -517,15 +639,17 @@ const onSelectChange = async (val: string, prop: string, data: EmptyObjectType) 
 		// });
 	} else if (prop === 'projectId') {
 		let projectName = '';
-		options.forEach((item) => {
+		let projectId = '';
+		state.tableData.dialogConfig![0].options.forEach((item) => {
 			if (item.value === data.projectId) {
 				projectName = item.text;
+				projectId = item.value;
 			}
 		});
 		const res = await getProjectQueryNoPageApi(projectName);
 		res.data.forEach((item: any) => {
-			if (item.projectname === projectName) {
-				data.productionlinetype = item.productionlinetype;
+			if (item.runid === projectId) {
+				data.productionLineType = item.productionlinetype;
 				data.projectCode = item.projectcode;
 				data.programName = item.programname;
 			}
@@ -551,10 +675,9 @@ const onSelectChange = async (val: string, prop: string, data: EmptyObjectType) 
 };
 // 發佈數據
 const addData = async (ruleForm: EmptyObjectType, type: string) => {
-	// console.log(ruleForm);
 	let {
 		projectId,
-		productionlinetype,
+		productionLineType,
 		stage,
 		programType,
 		projectCode,
@@ -562,48 +685,77 @@ const addData = async (ruleForm: EmptyObjectType, type: string) => {
 		// productionLineType,
 		// configInfo,
 		version,
-		checkSum,
+		checksum,
 		describe,
 		programFilePathfileUrl,
 		lwsFilePathfileUrl,
 		programFilePathfile,
 		stationName,
+		publishId,
+		stationMachines,
+		fileSize,
+		filePath,
 	} = ruleForm;
 	stationName = stationName.map((item: any) => {
 		return { stationName: item.split(',')[0], stationCode: item.split(',')[1], machineType: item.split(',')[2] };
 	});
-	const getData = {
-		projectId,
-		productionlinetype,
-		stage,
-		programType,
-		projectCode,
-		programName,
-		// productionLineType,
-		// configInfo,
-		version,
-		checkSum,
-		describe,
-		stationList: stationName,
-		programFilePath: programFilePathfileUrl,
-		lwsFilePath: lwsFilePathfileUrl,
-		fileSize: Number((programFilePathfile[0].size / (1024 * 1024)).toFixed(2)),
-	};
-	loadingBtn.value = true;
-	// console.log(getData);
-	const res = await postPublishAddPublishApi(getData);
-	loadingBtn.value = false;
-	if (res.status) {
-		state.tableData.search[0].options!.forEach((item) => {
-			if (item.value === getData.projectId) {
-				state.tableData.form.projectId = item.value;
-				item.selected = true;
-				tableSearchRef.value.initFormField();
-			}
-		});
-		ElMessage.success(t(`message.hint.publishSuccess`));
-		stationDialogRef.value.closeDialog();
-		getTableData();
+	if (type === 'add') {
+		const getData = {
+			projectId,
+			productionLineType,
+			stage,
+			programType,
+			projectCode,
+			programName,
+			// productionLineType,
+			// configInfo,
+			version,
+			checkSum: checksum,
+			describe,
+			stationList: stationName,
+			programFilePath: programFilePathfileUrl,
+			lwsFilePath: lwsFilePathfileUrl,
+			fileSize: Number((programFilePathfile[0].size / (1024 * 1024)).toFixed(2)),
+		};
+		loadingBtn.value = true;
+		// console.log(getData);
+		const res = await postPublishAddPublishApi(getData);
+		loadingBtn.value = false;
+		if (res.status) {
+			state.tableData.dialogConfig![0].options.forEach((item) => {
+				if (item.value === getData.projectId) {
+					state.tableData.search[0].options = state.tableData.dialogConfig![0].options;
+					state.tableData.form.projectId = item.value;
+					item.selected = true;
+					tableSearchRef.value.initFormField();
+				}
+			});
+			ElMessage.success(t(`message.hint.publishSuccess`));
+			stationDialogRef.value.closeDialog();
+			getTableData();
+		}
+	} else {
+		const editData = {
+			publishId,
+			programType,
+			stage,
+			fileSize,
+			stationList: stationName || stationMachines,
+			version,
+			programFilePath: programFilePathfileUrl,
+			lwsFilePath: lwsFilePathfileUrl,
+			checkSum: checksum,
+			describe,
+		};
+		// console.log(editData);
+		loadingBtn.value = true;
+		const res = await putPublishUpdatePublishApi(editData);
+		loadingBtn.value = false;
+		if (res.status) {
+			ElMessage.success(t(`修改成功`));
+			stationDialogRef.value.closeDialog();
+			getTableData();
+		}
 	}
 };
 // 表格删除当前项回调
@@ -626,21 +778,7 @@ const onTablePageChange = (page: TableDemoPageType) => {
 const onSortHeader = (data: TableHeaderType[]) => {
 	state.tableData.header = data;
 };
-// 專案下拉
-let options: EmptyArrayType = [];
-const getSelect = async () => {
-	const res = await getProjectQueryNoPageApi();
-	options = res.data.map((item: any) => {
-		return {
-			value: item.runid,
-			label: item.productionlinetype,
-			text: item.projectname,
-			selected: false,
-		};
-	});
-	state.tableData.search[0].options = options;
-	state.tableData.dialogConfig![0].options = options;
-};
+
 // 站位下拉
 const getStationSelect = async (val: string) => {
 	const res = await getProjectQueryNopageProjectStationApi(val);
@@ -648,8 +786,9 @@ const getStationSelect = async (val: string) => {
 		return {
 			value: item.stationname + ',' + item.stationcode + ',' + item.machinetype,
 			label: item.stationcode,
-			text: `${t('message.pages.position')}：${item.stationname}，${t('機臺編號')}：${item.stationcode}`,
+			text: `${t('message.pages.position')}：${item.stationname}，${t('站位代碼')}：${item.stationcode}`,
 			value2: item.stationname,
+			value3: item.line,
 		};
 	});
 	// state.tableData.search[1].options = options;
@@ -658,6 +797,20 @@ const getStationSelect = async (val: string) => {
 			item.options = options;
 		}
 	});
+};
+// 專案名稱下拉
+const getSelect = async () => {
+	const res = await getProjectQueryNoPageApi();
+	let selectOption = res.data.map((item: any) => {
+		return {
+			value: item.runid,
+			label: item.productionlinetype,
+			text: item.projectname,
+			selected: false,
+		};
+	});
+	state.tableData.search[0].options = selectOption;
+	state.tableData.dialogConfig![0].options = selectOption;
 };
 // 页面加载时
 onMounted(() => {

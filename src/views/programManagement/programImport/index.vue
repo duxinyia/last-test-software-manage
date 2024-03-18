@@ -15,19 +15,23 @@
 				@openAdd="openDialog"
 				:cellStyle="cellStyle"
 				@cellclick="versionClick"
+				@onOpenOtherDialog="lookImportStatus"
 			>
-				<template #slotCol="{ row }">
-					<el-popover placement="bottom-start" width="20%" trigger="hover">
+				<!-- <template #slotCol="{ row }">
+					<el-popover placement="bottom-start" width="40%" trigger="hover">
 						<el-table class="popover-table" :data="row.stationMachines" style="width: 100%" stripe max-height="250">
+							<el-table-column show-overflow-tooltip align="center" prop="line" :label="$t('線體')" />
 							<el-table-column show-overflow-tooltip align="center" prop="stationName" :label="$t('message.pages.stationName')" />
-							<el-table-column show-overflow-tooltip align="center" prop="stationCode" :label="$t('機臺編號')" />
+							<el-table-column show-overflow-tooltip align="center" prop="stationCode" :label="$t('站位代碼')" />
+							<el-table-column show-overflow-tooltip align="center" prop="machineNo" :label="$t('機臺號')" />
 							<el-table-column show-overflow-tooltip align="center" prop="machineType" :label="$t('message.pages.machineType')" />
+							<el-table-column show-overflow-tooltip align="center" prop="importStatus" :label="$t('導入狀態')" />
 						</el-table>
 						<template #reference>
 							<span style="text-align: center; width: 100%; cursor: pointer; color: #0047c5"> {{ row.projectName }} </span>
 						</template>
 					</el-popover>
-				</template>
+				</template> -->
 			</Table>
 			<!-- 新增编辑弹窗 -->
 			<Dialog ref="stationDialogRef" @addData="addData" :loadingBtn="loadingBtn" dialogWidth="70%" :isFootBtn="isFootBtn">
@@ -90,6 +94,13 @@
 					/>
 				</template>
 			</Dialog>
+			<Dialog ref="importStatusDialogRef" :isFootBtn="false" dialogWidth="60%">
+				<template #dialogTable="{ datas }">
+					<el-form ref="tableFormRef" :model="importStatusdialogState.tableData" size="default">
+						<Table ref="dialogTableRef" v-bind="importStatusdialogState.tableData" class="table-dialog"> </Table>
+					</el-form>
+				</template>
+			</Dialog>
 		</div>
 	</div>
 </template>
@@ -99,7 +110,12 @@ import { defineAsyncComponent, reactive, ref, onMounted, computed, watch, nextTi
 import { ElMessage, FormInstance } from 'element-plus';
 import { useI18n } from 'vue-i18n';
 import axios from 'axios';
-import { postPublishImportProgramApi, postPublishQueryPageImportApi, postPublishQueryWaitImportApi } from '/@/api/programManagement/programImport';
+import {
+	postPublishImportProgramApi,
+	postPublishQueryImportStatusApi,
+	postPublishQueryPageImportApi,
+	postPublishQueryWaitImportApi,
+} from '/@/api/programManagement/programImport';
 // 引入组件
 const Table = defineAsyncComponent(() => import('/@/components/table/index.vue'));
 const TableSearch = defineAsyncComponent(() => import('/@/components/search/search.vue'));
@@ -116,9 +132,12 @@ const loading = ref(false);
 const isFootBtn = ref(true);
 const dialogType = ref('page');
 const validTime = ref('');
+const importStatusDialogRef = ref();
 const setExpandHeader = ref([
+	{ key: 'line', colWidth: '', title: '線體', type: 'text', isCheck: true, isRequired: false },
 	{ key: 'stationName', colWidth: '', title: 'message.pages.stationName', type: 'text', isCheck: true, isRequired: false },
-	{ key: 'stationCode', colWidth: '', title: '機臺編號', type: 'text', isCheck: true, isRequired: false },
+	{ key: 'stationCode', colWidth: '', title: '站位代碼', type: 'text', isCheck: true, isRequired: false },
+	{ key: 'machineNo', colWidth: '', title: '機臺號', type: 'text', isCheck: true, isRequired: false },
 	{ key: 'machineType', colWidth: '', title: '機臺類型', type: 'text', isCheck: true, isRequired: false },
 ]);
 const state = reactive<TableDemoState>({
@@ -127,7 +146,7 @@ const state = reactive<TableDemoState>({
 		data: [],
 		// 表头内容（必传，注意格式）
 		header: [
-			{ key: 'projectName', colWidth: '', title: 'message.pages.projectName', type: 'slot', isCheck: true },
+			{ key: 'projectName', colWidth: '', title: 'message.pages.projectName', type: 'text', isCheck: true },
 			{ key: 'projectCode', colWidth: '', title: 'message.pages.projectCode', type: 'text', isCheck: true },
 			{ key: 'productionLineType', colWidth: '', title: 'message.pages.productionlinetype', type: 'text', isCheck: true },
 			{ key: 'stage', colWidth: '', title: 'message.pages.stage', type: 'text', isCheck: true },
@@ -156,17 +175,17 @@ const state = reactive<TableDemoState>({
 			isBorder: false, // 是否显示表格边框
 			isSerialNo: true, // 是否显示表格序号
 			isSelection: false, // 是否显示表格多选
-			isOperate: false, // 是否显示表格操作栏
+			isOperate: true, // 是否显示表格操作栏
 			isButton: true, //是否显示表格上面的新增删除按钮
 			isInlineEditing: false, //是否是行内编辑
 			isTopTool: false, //是否有表格右上角工具
 			isPage: true, //是否有分页
-			operateWidth: 220,
+			operateWidth: 150,
 			isBulkDeletionBtn: false,
 		},
 		topBtnConfig: [{ type: 'add', name: 'message.pages.programImport', defaultColor: 'primary', isSure: true, disabled: true }],
 		btnConfig: [
-			// { type: 'edit', name: 'message.allButton.editBtn', isSure: false, icon: 'ele-Edit', defaultColor: 'warning' },
+			{ type: 'detail', name: '查看導入狀態', isSure: false, icon: 'ele-View', defaultColor: 'success' },
 			// { type: 'del', name: 'message.allButton.deleteBtn', isSure: true, defaultColor: 'danger' },
 		],
 		// 搜索表单，动态生成（传空数组时，将不显示搜索，注意格式）
@@ -174,7 +193,8 @@ const state = reactive<TableDemoState>({
 			{ label: 'message.pages.projectName', placeholder: '', prop: 'projectName', required: false, type: 'input' },
 			{ label: 'message.pages.projectCode', placeholder: '', prop: 'projectCode', required: false, type: 'input' },
 			{ label: 'message.pages.stationName', prop: 'stationName', required: false, type: 'input' },
-			{ label: '機臺編號', placeholder: '', prop: 'stationCode', required: false, type: 'input' },
+			{ label: '站位代碼', placeholder: '', prop: 'stationCode', required: false, type: 'input' },
+			{ label: '機臺號', placeholder: '', prop: 'machineNo', required: false, type: 'input' },
 			{ label: '導入時間', prop: 'importTime', required: false, type: 'dateRange' },
 		],
 		searchConfig: {
@@ -220,6 +240,7 @@ const dialogState = reactive<TableDemoState>({
 			{ key: 'fileSize', colWidth: '', title: 'message.pages.packageSize', type: 'text', isCheck: true },
 			{ key: 'lwsFileName', colWidth: '', title: 'LWS文件名', type: 'text', isCheck: true },
 			{ key: 'signOvertime', colWidth: '', title: '簽核完成時間', type: 'text', isCheck: true },
+			// { key: 'downloadStatus', colWidth: '', title: '下載狀態', type: 'text', isCheck: true },
 		],
 		// 配置项（必传）
 		config: {
@@ -259,6 +280,62 @@ const dialogState = reactive<TableDemoState>({
 		printName: '',
 		// 弹窗表单
 		dialogConfig: [],
+	},
+});
+const importStatusdialogState = reactive<TableDemoState>({
+	tableData: {
+		// 列表数据（必传）
+		data: [],
+		// 表头内容（必传，注意格式）
+		header: [
+			{ key: 'line', colWidth: '', title: '線體', type: 'text', isCheck: true },
+			{ key: 'stationName', colWidth: '', title: 'message.pages.stationName', type: 'text', isCheck: true },
+			{ key: 'stationCode', colWidth: '', title: 'message.pages.stationCode', type: 'text', isCheck: true },
+			{ key: 'machineType', colWidth: '', title: '機臺類型', type: 'text', isCheck: true },
+			{ key: 'machineno', colWidth: '', title: '機臺號', type: 'text', isCheck: true },
+			{ key: 'version', colWidth: '', title: '當前版本', type: 'text', isCheck: true },
+			{
+				key: 'importStatus',
+				colWidth: '',
+				title: '導入狀態',
+				type: 'text',
+				isCheck: true,
+				transfer: {
+					0: '未下載',
+					1: '已下載',
+					2: '已導入',
+				},
+			},
+		],
+		// 配置项（必传）
+		config: {
+			total: 0, // 列表总数
+			loading: false, // loading 加载
+			isBorder: false, // 是否显示表格边框
+			isSerialNo: true, // 是否显示表格序号
+			isSelection: false, // 是否显示表格多选
+			isOperate: false, // 是否显示表格操作栏
+			isButton: true, //是否显示表格上面的新增删除按钮
+			isInlineEditing: false, //是否是行内编辑
+			isTopTool: false, //是否有表格右上角工具
+			isPage: true, //是否有分页
+			operateWidth: 220,
+
+			height: 500,
+		},
+		topBtnConfig: [],
+		btnConfig: [],
+		// 搜索表单，动态生成（传空数组时，将不显示搜索，注意格式）
+		search: [],
+		searchConfig: {
+			isSearchBtn: true,
+		},
+		// 给后端的数据
+		form: {},
+		page: {
+			pageNum: 1,
+			pageSize: 10,
+		},
 	},
 });
 // 单元格字体颜色
@@ -335,6 +412,16 @@ const getTableData = async (datas: EmptyObjectType) => {
 		};
 		delete data.importTime;
 		res = await postPublishQueryPageImportApi(data);
+		// const importStatusMap: EmptyObjectType = {
+		// 	0: '未下載',
+		// 	1: '已下載',
+		// 	2: '已導入',
+		// };
+		// res.data.data.forEach((item: any) => {
+		// 	item.stationMachines.forEach((machine: any) => {
+		// 		machine.importStatus = importStatusMap[machine.importStatus];
+		// 	});
+		// });
 	} else {
 		let data: EmptyObjectType = {
 			...form,
@@ -342,6 +429,7 @@ const getTableData = async (datas: EmptyObjectType) => {
 		};
 		res = await postPublishQueryWaitImportApi(data);
 		res.data.data.forEach((item: any) => {
+			// item.downloadStatus = '未下載';
 			item.stationMachines.forEach((mat: any) => {
 				mat.publishId = item.publishId;
 			});
@@ -369,7 +457,21 @@ const openDialog = (type: string, row: EmptyObjectType) => {
 	if (seachFormRef.value) seachFormRef?.value.onReset();
 	getTableData(dialogState.tableData);
 };
-
+// 打開查看導入狀態彈窗
+const lookImportStatus = async (scope: EmptyObjectType, type: string) => {
+	let importStatusdialogStateData = importStatusdialogState.tableData;
+	importStatusDialogRef.value.openDialog(type, scope.row, '查看導入狀態');
+	let data = {
+		importId: scope.row.importId,
+		page: importStatusdialogStateData.page,
+	};
+	importStatusdialogStateData.config.loading = true;
+	const res = await postPublishQueryImportStatusApi(data);
+	importStatusdialogStateData.data = res.data.data;
+	if (res.status) {
+		importStatusdialogStateData.config.loading = false;
+	}
+};
 // 導入數據
 const addData = async (ruleForm: EmptyObjectType, type: string) => {
 	let data = selectList.value;
@@ -377,7 +479,13 @@ const addData = async (ruleForm: EmptyObjectType, type: string) => {
 	if (data.length <= 0) return ElMessage.warning(t('請選擇要導入的專案'));
 	loadingBtn.value = true;
 	const stationList = data.map((item) => {
-		return { machineType: item.machineType, stationCode: item.stationCode, stationName: item.stationName };
+		return {
+			line: item.line,
+			machineType: item.machineType,
+			stationCode: item.stationCode,
+			stationName: item.stationName,
+			machineNo: item.machineNo,
+		};
 	});
 	const res = await postPublishImportProgramApi({ publishId: data[0].publishId, stationList, validTime: validTime.value });
 	if (res.status) {

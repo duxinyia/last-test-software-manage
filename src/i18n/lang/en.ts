@@ -6,6 +6,7 @@ export default {
 		basicData:'basic data',
 		position:'position',
 		machineType:'machine type',
+		machine:'machine',
 		stage:'stage',
 		projectConfiguration:'project configuration',
 		projectManagement:'project manage',

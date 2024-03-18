@@ -3,7 +3,7 @@ import request from '/@/utils/request';
 // 查询站位（分頁）
 export function postMachineTypeQueryPageApi(data: Object) {
 	return request({
-		url: '/api/MachineType/QueryPage',
+		url: '/api/Machine/QueryPage',
 		method: 'POST',
 		data: data,
 	});
@@ -11,7 +11,7 @@ export function postMachineTypeQueryPageApi(data: Object) {
 // 新增站位
 export function postMachineTypeAddMachineTypeApi(data: Object) {
 	return request({
-		url: '/api/MachineType/AddMachineType',
+		url: '/api/Machine/AddMachine',
 		method: 'POST',
 		data: data,
 	});
@@ -19,16 +19,16 @@ export function postMachineTypeAddMachineTypeApi(data: Object) {
 // 修改站位
 export function putMachineTypeUpdateMachineTypeApi(data: Object) {
 	return request({
-		url: '/api/MachineType/UpdateMachineType',
+		url: '/api/Machine/UpdateMachine',
 		method: 'PUT',
 		data: data,
 	});
 }
 // 刪除站位
-export function deleteMachineTypeDeleteMachineTypeApi(runId: string) {
+export function deleteMachineTypeDeleteMachineTypeApi(machineNo: string) {
 	return request({
-		url: `/api/MachineType/DeleteMachineType`,
+		url: `/api/Machine/DeleteMachine`,
 		method: 'DELETE',
-    params:{runId}
+    params:{machineNo}
 	});
 }

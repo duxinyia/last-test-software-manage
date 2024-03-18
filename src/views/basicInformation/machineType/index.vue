@@ -51,7 +51,10 @@ const state = reactive<TableDemoState>({
 		// 列表数据（必传）
 		data: [],
 		// 表头内容（必传，注意格式）
-		header: [{ key: 'machinetypename', colWidth: '', title: 'message.pages.typeName', type: 'text', isCheck: true }],
+		header: [
+			{ key: 'machineno', colWidth: '', title: '機臺編號', type: 'text', isCheck: true },
+			{ key: 'machinetype', colWidth: '', title: 'message.pages.machineType', type: 'text', isCheck: true },
+		],
 		// 配置项（必传）
 		config: {
 			total: 0, // 列表总数
@@ -67,7 +70,7 @@ const state = reactive<TableDemoState>({
 			operateWidth: 220,
 			isBulkDeletionBtn: false,
 		},
-		topBtnConfig: [{ type: 'add', name: 'message.pages.addMachineType', defaultColor: 'primary', isSure: true, disabled: true }],
+		topBtnConfig: [{ type: 'add', name: '新增機臺', defaultColor: 'primary', isSure: true, disabled: true }],
 		btnConfig: [
 			{ type: 'edit', name: 'message.allButton.editBtn', isSure: false, icon: 'ele-Edit', defaultColor: 'warning' },
 			{ type: 'del', name: 'message.allButton.deleteBtn', isSure: true, defaultColor: 'danger' },
@@ -75,8 +78,8 @@ const state = reactive<TableDemoState>({
 		// 搜索表单，动态生成（传空数组时，将不显示搜索，注意格式）
 		search: [
 			{
-				label: 'message.pages.typeName',
-				prop: 'machineType',
+				label: '機臺編號',
+				prop: 'machineNo',
 				required: false,
 				type: 'input',
 			},
@@ -96,8 +99,22 @@ const state = reactive<TableDemoState>({
 		// 弹窗表单
 		dialogConfig: [
 			{
-				label: 'message.pages.typeName',
-				prop: 'machinetypename',
+				label: '機臺編號',
+				prop: 'machineno',
+				placeholder: '',
+				required: true,
+				type: 'input',
+				standbyType: 'input',
+				xs: 24,
+				sm: 24,
+				md: 24,
+				lg: 24,
+				xl: 24,
+				isCheck: true,
+			},
+			{
+				label: 'message.pages.machineType',
+				prop: 'machinetype',
 				placeholder: '',
 				required: true,
 				type: 'input',
@@ -135,16 +152,19 @@ const onSearch = (data: EmptyObjectType) => {
 };
 // 打开新增編輯弹窗
 const openDialog = (type: string, row: EmptyObjectType) => {
-	stationDialogRef.value.openDialog(type, row, 'message.pages.machineType');
+	stationDialogRef.value.openDialog(type, row, 'message.pages.machine');
+	const machineNodialogConfig = state.tableData.dialogConfig![0];
+	machineNodialogConfig.type = type === 'edit' ? 'text' : 'input';
+	machineNodialogConfig.required = type === 'edit' ? false : true;
 };
 
 // 新增数据  修改数据
 const addData = async (ruleForm: EmptyObjectType, type: string) => {
 	loadingBtn.value = true;
-	const editData = { runId: ruleForm.runid, machineType: ruleForm.machinetypename };
+	const editData = { machineNo: ruleForm.machineno, machineType: ruleForm.machinetype };
 	const res =
 		type === 'add'
-			? await postMachineTypeAddMachineTypeApi({ machineType: ruleForm.machinetypename })
+			? await postMachineTypeAddMachineTypeApi({ machineNo: ruleForm.machineno, machineType: ruleForm.machinetype })
 			: await putMachineTypeUpdateMachineTypeApi(editData);
 	if (res.status) {
 		type === 'add' ? ElMessage.success(t(`message.hint.addSuccess`)) : ElMessage.success(t(`message.hint.modifiedSuccess`));
@@ -155,7 +175,7 @@ const addData = async (ruleForm: EmptyObjectType, type: string) => {
 };
 // 表格删除当前项回调
 const onTableDelRow = async (row: EmptyObjectType, type: string) => {
-	const res = await deleteMachineTypeDeleteMachineTypeApi(row.runid);
+	const res = await deleteMachineTypeDeleteMachineTypeApi(row.machineno);
 	if (res.status) {
 		ElMessage.success(`${t('message.allButton.deleteBtn')} ${t('message.hint.success')}`);
 		getTableData();

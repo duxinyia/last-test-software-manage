@@ -23,3 +23,11 @@ export function postPublishImportProgramApi(data: Object) {
 		data: data,
 	});
 }
+// 查詢導入狀態
+export function postPublishQueryImportStatusApi(data: Object) {
+	return request({
+		url: '/api/Publish/QueryImportStatus',
+		method: 'POST',
+		data: data,
+	});
+}

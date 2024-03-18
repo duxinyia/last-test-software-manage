@@ -87,3 +87,35 @@ export function getStationQueryNoPageApi(stationName: string) {
 		params:{stationName},
 	});
 }
+// 站位新增機台
+export function postProjectAddStationMachineApi(data: Object) {
+	return request({
+		url: '/api/Project/AddStationMachine',
+		method: 'POST',
+		data: data,
+	});
+}
+// 查询站位下的機台（不分頁）
+export function getStationMachineListApi(stationCode: string,line:string,projectCode:string) {
+	return request({
+		url: '/api/Project/GetStationMachineList',
+		method: 'GET',
+		params:{stationCode,line,projectCode},
+	});
+}
+// 修改站位下機台
+export function postProjectUpdateStationMachineApi(data: Object) {
+	return request({
+		url: '/api/Project/UpdateStationMachine',
+		method: 'POST',
+		data: data,
+	});
+}
+// 刪除站位下的機台
+export function deleteProjectDeleteStationMachineApi(runId: string) {
+	return request({
+		url: `/api/Project/DeleteStationMachine`,
+		method: 'DELETE',
+    params:{runId}
+	});
+}

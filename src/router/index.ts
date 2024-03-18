@@ -31,6 +31,7 @@ const { isRequestRoutes } = themeConfig.value;
  * @link 参考：https://next.router.vuejs.org/zh/api/#createrouter
  */
 export const router = createRouter({
+	// 路由器的工作模式
 	history: createWebHashHistory(),
 	/**
 	 * 说明：

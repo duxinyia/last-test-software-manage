@@ -6,6 +6,7 @@ export default {
 		basicData:'基礎資料',
 		position:'站位',
 		machineType:'機臺型號',
+		machine:'機臺',
 		stage:'階段',
 		projectConfiguration:'專案配置',
 		projectManagement:'專案管理',

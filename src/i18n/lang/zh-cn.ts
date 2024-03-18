@@ -6,6 +6,7 @@ export default {
 		basicData:'基础资料',
 		position:'站位',
 		machineType:'机台型号',
+		machine:'机台',
 		stage:'阶段',
 		projectConfiguration:'专案配置',
 		projectManagement:'专案管理',
