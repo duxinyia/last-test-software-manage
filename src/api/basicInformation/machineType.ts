@@ -32,3 +32,11 @@ export function deleteMachineTypeDeleteMachineTypeApi(machineNo: string) {
     params:{machineNo}
 	});
 }
+// 導入機台
+export function postMachineTypeImportMachineApi(filePath: string) {
+	return request({
+		url: '/api/Machine/ImportMachine',
+		method: 'POST',
+		params:{filePath}
+	});
+}

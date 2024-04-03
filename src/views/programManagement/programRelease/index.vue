@@ -17,7 +17,6 @@
 				ref="tableRef"
 				v-bind="state.tableData"
 				class="table"
-				@delRow="onTableDelRow"
 				@pageChange="onTablePageChange"
 				@sortHeader="onSortHeader"
 				@openAdd="openDialog"
@@ -60,6 +59,11 @@
 									{{ item.fileName }}
 								</a>
 							</template>
+							<template #rowIcons="{ row, itemConfig }">
+								<div class="circle" v-if="itemConfig.key === 'signFlowOrderUserId' && row.statusDesc != 'Y'">
+									<span>{{ row.statusDesc }}</span>
+								</div>
+							</template>
 						</Table>
 					</el-form>
 				</template>
@@ -68,12 +72,16 @@
 						<!-- <span style="">{{ t('線體') }}：{{ row.value3 }}</span> -->
 						<span style="">{{ t('message.pages.position') }}：{{ row.value2 }}</span>
 						<span style="color: var(--el-text-color-secondary); font-size: 13px">{{ t('站位代碼') }}：{{ row.label }}</span>
+						<span style="color: var(--el-text-color-secondary); font-size: 13px">{{ t('機臺型號') }}：{{ row.value4 }}</span>
 					</div>
 
 					<span v-if="items.prop === 'projectId'" style="float: left">{{ t('message.pages.projectName') }}：{{ row.text }}</span>
 					<span v-if="items.prop === 'projectId'" style="float: right; color: var(--el-text-color-secondary)"
 						>{{ t('message.pages.productionlinetype') }}:{{ row.label }}</span
 					>
+				</template>
+				<template #dialogBtn="{ data }">
+					<el-button v-if="btnType === 'edit'" :loading="loadingDelBtn" type="danger" @click="onTableDelRow(data)" size="default">刪 除</el-button>
 				</template>
 			</Dialog>
 			<!-- 詳情彈窗 -->
@@ -93,6 +101,7 @@ import {
 	getProjectQueryNoPageApi,
 	getProjectQueryNopageProjectStationApi,
 	getPublishGetSignFlowApi,
+	postExportPublishStationApi,
 	postPublishAddPublishApi,
 	postPublishQueryPageApi,
 	postPublishSubmitSignApi,
@@ -111,6 +120,7 @@ const stationDialogRef = ref();
 const tableSearchRef = ref();
 const tableRef = ref<RefType>();
 const loadingBtn = ref(false);
+const loadingDelBtn = ref(false);
 const isFootBtn = ref(true);
 const btnType = ref();
 const detaildialogVisible = ref(false);
@@ -142,19 +152,20 @@ const state = reactive<TableDemoState>({
 			{ key: 'fileSize', colWidth: '', title: 'message.pages.packageSize', type: 'text', isCheck: true },
 			{ key: 'checksum', colWidth: '', title: 'CheckSum', type: 'text', isCheck: false },
 			{ key: 'describe', colWidth: '', title: '更新描述', type: 'text', isCheck: false },
-			{
-				key: 'signStatus',
-				colWidth: '',
-				title: '當前狀態',
-				type: 'text',
-				isCheck: true,
-				transfer: {
-					0: '未簽核',
-					1: '簽核中',
-					2: '已簽核',
-					4: '已駁回',
-				},
-			},
+			// {
+			// 	key: 'signStatus',
+			// 	colWidth: '',
+			// 	title: '當前狀態',
+			// 	type: 'text',
+			// 	isCheck: true,
+			// 	transfer: {
+			// 		0: '未簽核',
+			// 		1: '簽核中',
+			// 		2: '已簽核',
+			// 		4: '已駁回',
+			// 	},
+			// },
+			{ key: 'curResName', colWidth: '160', title: '當前責任人', type: 'text', isCheck: true },
 			// { key: 'runStatusText', colWidth: '', title: '發佈狀態', type: 'text', isCheck: true },
 		],
 		// 配置项（必传）
@@ -169,19 +180,20 @@ const state = reactive<TableDemoState>({
 			isInlineEditing: false, //是否是行内编辑
 			isTopTool: true, //是否有表格右上角工具
 			isPage: true, //是否有分页
-			operateWidth: 350,
+			operateWidth: 200,
 			isBulkDeletionBtn: false,
 			exportIcon: true, //是否有导出icon(导出功能)
 		},
 		topBtnConfig: [{ type: 'add', name: 'message.pages.publisher', defaultColor: 'primary', isSure: true, disabled: true }],
 		btnConfig: [
+			{ type: 'edit', name: '编辑', isSure: false, color: '#438df5', icon: 'ele-Edit' },
 			{ type: 'signProgress', name: '已簽核', isSure: false, color: '#00aa59', icon: '' },
 			{ type: 'signing', name: '簽核中', isSure: false, color: '#e6a23c', icon: '' },
 			{ type: 'rejected', name: '已駁回', isSure: false, color: '#ff0000', icon: '' },
 			{ type: 'send', name: 'message.pages.send', isSure: false, defaultColor: 'success', icon: 'ele-TopRight' },
 			{ type: 'detail', name: 'message.pages.detail', isSure: false, defaultColor: 'primary', icon: 'ele-View' },
-			{ type: 'edit', name: '编辑', isSure: false, color: '#438df5', icon: '' },
-			{ type: 'del', name: 'message.allButton.deleteBtn', isSure: true, defaultColor: 'danger' },
+
+			// { type: 'del', name: 'message.allButton.deleteBtn', isSure: true, defaultColor: 'danger' },
 		],
 		// 搜索表单，动态生成（传空数组时，将不显示搜索，注意格式）
 		search: [
@@ -342,6 +354,7 @@ const state = reactive<TableDemoState>({
 				placeholder: 'message.pages.pleaseClickUploadFile',
 				required: true,
 				type: 'optionFile',
+				accept: '.zip',
 				isCheck: true,
 				xs: 24,
 				sm: 24,
@@ -408,7 +421,7 @@ const satusState = reactive<TableDemoState>({
 		data: [],
 		// 表头内容（必传，注意格式）
 		header: [
-			{ key: 'signFlowOrderUserId', colWidth: '', title: 'message.pages.signatory', type: 'text', isCheck: true },
+			{ key: 'signFlowOrderUserId', colWidth: '200', title: 'message.pages.signatory', type: 'text', isCheck: true },
 			{ key: 'signUserRemarks', colWidth: '', title: 'message.pages.signingCoreNode', type: 'text', isCheck: true },
 			{ key: 'updateTime', colWidth: '', title: 'message.pages.signatureTime', type: 'text', isCheck: true },
 			{ key: 'signFlowNodeMemo', colWidth: '', title: 'message.pages.signIdea', type: 'text', isCheck: true },
@@ -443,7 +456,28 @@ const satusState = reactive<TableDemoState>({
 });
 // 導出
 const onExportTableData = async (row: EmptyObjectType, hearder: EmptyObjectType) => {
-	console.log(row);
+	const form = state.tableData.form;
+	let data: EmptyObjectType = {
+		...form,
+		startTime: form.publishDate && form.publishDate[0],
+		endTime: form.publishDate && form.publishDate[1],
+	};
+	delete data.publishDate;
+	if (Object.keys(data).length <= 2 || state.tableData.data.length <= 0) return ElMessage.warning(t('沒有可以導出的專案'));
+	const res = await postExportPublishStationApi(data);
+	const result: any = res.data;
+	let blob = new Blob([result], {
+		// 这里一定要和后端对应，不然可能出现乱码或者打不开文件
+		type: 'application/vnd.ms-excel',
+	});
+	const link = document.createElement('a');
+	link.href = window.URL.createObjectURL(blob);
+	const temp = res.headers['content-disposition'].split(';')[1].split('filename=')[1].replace(new RegExp('"', 'g'), '');
+	link.download = decodeURIComponent(temp);
+	// link.download = `${t('料號')} ${new Date().toLocaleString()}.xlsx`; // 在前端也可以设置文件名字
+	link.click();
+	//释放内存
+	window.URL.revokeObjectURL(link.href);
 };
 // 點擊詳情或者送簽按鈕或者已簽核和簽核中按鈕
 const onOtherBtn = async (scope: EmptyObjectType, type: string) => {
@@ -512,26 +546,36 @@ const getTableData = async () => {
 	delete data.publishDate;
 	const res = await postPublishQueryPageApi(data);
 	res.data.data.forEach((item: any) => {
+		if (item.curResName) item.curResName = `${item.curResponsible} / ${item.curResName}`;
 		// item.programType = programTypeMap[item.programType];
 		// item.sendIsShow = item.delDisabled = item.signStatus === 0 ? false : true;
-		item.delDisabled = item.signStatus === 0 ? false : true;
+		// item.delIsShow = item.signStatus === 0 ? false : true;
 		if (item.signStatus === 1) {
 			// 簽核中
 			item.signingIsShow = false;
 			item.editIsShow = item.rejectedIsShow = item.sendIsShow = item.signProgressIsShow = true;
+			item.btnNumber = 2;
 		} else if (item.signStatus === 2) {
 			// 已簽核
 			item.editIsShow = item.rejectedIsShow = item.sendIsShow = item.signingIsShow = true;
 			item.signProgressIsShow = false;
+			item.btnNumber = 2;
 		} else if (item.signStatus === 0) {
 			// 未簽核
 			item.rejectedIsShow = item.signProgressIsShow = item.signingIsShow = true;
 			item.editIsShow = item.sendIsShow = false;
+			item.btnNumber = 3;
 		} else if (item.signStatus === 4) {
-			item.sendIsShow = item.signProgressIsShow = item.signingIsShow = true;
-			item.editIsShow = item.rejectedIsShow = false;
+			item.editIsShow = item.sendIsShow = item.signProgressIsShow = item.signingIsShow = true;
+			item.rejectedIsShow = false;
+			item.btnNumber = 2;
 		}
 	});
+	// 操作欄寬度
+	const width = res.data.data.some((item: any) => {
+		return item.btnNumber === 3;
+	});
+	state.tableData.config.operateWidth = width ? 290 : 200;
 	state.tableData.data = res.data.data;
 	state.tableData.config.total = res.data.total;
 	if (res.status) {
@@ -602,7 +646,7 @@ const openEditDialog = (formData: EmptyObjectType) => {
 	// 展示专案名称
 	formData.projectId = formData.projectName;
 	formData.stationName = formData.stationMachines.map((item: any) => {
-		return item.stationName + ',' + item.stationCode + ',' + item.machineType;
+		return item.stationName + '|' + item.stationCode + '|' + item.machineType;
 	});
 	// 调站位接口
 	getStationSelect(id);
@@ -640,10 +684,10 @@ const onSelectChange = async (val: string, prop: string, data: EmptyObjectType) 
 	} else if (prop === 'projectId') {
 		let projectName = '';
 		let projectId = '';
-		state.tableData.dialogConfig![0].options.forEach((item) => {
+		state.tableData.dialogConfig![0].options!.forEach((item) => {
 			if (item.value === data.projectId) {
-				projectName = item.text;
-				projectId = item.value;
+				projectName = item.text as string;
+				projectId = item.value as string;
 			}
 		});
 		const res = await getProjectQueryNoPageApi(projectName);
@@ -651,6 +695,7 @@ const onSelectChange = async (val: string, prop: string, data: EmptyObjectType) 
 			if (item.runid === projectId) {
 				data.productionLineType = item.productionlinetype;
 				data.projectCode = item.projectcode;
+				data.projectName = item.projectname;
 				data.programName = item.programname;
 			}
 		});
@@ -688,6 +733,7 @@ const addData = async (ruleForm: EmptyObjectType, type: string) => {
 		checksum,
 		describe,
 		programFilePathfileUrl,
+		programFilePath,
 		lwsFilePathfileUrl,
 		programFilePathfile,
 		stationName,
@@ -696,8 +742,10 @@ const addData = async (ruleForm: EmptyObjectType, type: string) => {
 		fileSize,
 		filePath,
 	} = ruleForm;
+	// console.log(stationName);
+
 	stationName = stationName.map((item: any) => {
-		return { stationName: item.split(',')[0], stationCode: item.split(',')[1], machineType: item.split(',')[2] };
+		return { stationName: item.split('|')[0], stationCode: item.split('|')[1], machineType: item.split('|')[2] };
 	});
 	if (type === 'add') {
 		const getData = {
@@ -714,6 +762,7 @@ const addData = async (ruleForm: EmptyObjectType, type: string) => {
 			describe,
 			stationList: stationName,
 			programFilePath: programFilePathfileUrl,
+			programFileName: programFilePath,
 			lwsFilePath: lwsFilePathfileUrl,
 			fileSize: Number((programFilePathfile[0].size / (1024 * 1024)).toFixed(2)),
 		};
@@ -722,7 +771,7 @@ const addData = async (ruleForm: EmptyObjectType, type: string) => {
 		const res = await postPublishAddPublishApi(getData);
 		loadingBtn.value = false;
 		if (res.status) {
-			state.tableData.dialogConfig![0].options.forEach((item) => {
+			state.tableData.dialogConfig![0].options!.forEach((item) => {
 				if (item.value === getData.projectId) {
 					state.tableData.search[0].options = state.tableData.dialogConfig![0].options;
 					state.tableData.form.projectId = item.value;
@@ -739,10 +788,11 @@ const addData = async (ruleForm: EmptyObjectType, type: string) => {
 			publishId,
 			programType,
 			stage,
-			fileSize,
+			fileSize: Number((programFilePathfile[0].size / (1024 * 1024)).toFixed(2)),
 			stationList: stationName || stationMachines,
 			version,
 			programFilePath: programFilePathfileUrl,
+			programFileName: programFilePath,
 			lwsFilePath: lwsFilePathfileUrl,
 			checkSum: checksum,
 			describe,
@@ -759,15 +809,29 @@ const addData = async (ruleForm: EmptyObjectType, type: string) => {
 	}
 };
 // 表格删除当前项回调
-const onTableDelRow = async (row: EmptyObjectType, type: string) => {
-	if (row.signStatus === 0) {
-		const res = await deletePublishDeletePublishApi(row.publishId);
-		if (res.status) {
-			ElMessage.success(`${t('message.allButton.deleteBtn')} ${t('message.hint.success')}`);
-			getTableData();
-		}
-	}
+const onTableDelRow = async (datas: EmptyObjectType) => {
+	ElMessageBox.confirm(`確定刪除嗎？`, '提示', {
+		confirmButtonText: '確 定',
+		cancelButtonText: '取 消',
+		type: 'warning',
+		draggable: true,
+	})
+		.then(async () => {
+			let formData = datas.formData;
+			if (formData.signStatus === 0) {
+				loadingDelBtn.value = true;
+				const res = await deletePublishDeletePublishApi(formData.publishId);
+				loadingDelBtn.value = false;
+				if (res.status) {
+					ElMessage.success(`${t('message.allButton.deleteBtn')} ${t('message.hint.success')}`);
+					stationDialogRef.value.closeDialog();
+					getTableData();
+				}
+			}
+		})
+		.catch(() => {});
 };
+
 // 分页改变时回调
 const onTablePageChange = (page: TableDemoPageType) => {
 	state.tableData.page.pageNum = page.pageNum;
@@ -784,11 +848,12 @@ const getStationSelect = async (val: string) => {
 	const res = await getProjectQueryNopageProjectStationApi(val);
 	let options = res.data.map((item: any) => {
 		return {
-			value: item.stationname + ',' + item.stationcode + ',' + item.machinetype,
+			value: item.stationname + '|' + item.stationcode + '|' + item.machinetypes,
 			label: item.stationcode,
-			text: `${t('message.pages.position')}：${item.stationname}，${t('站位代碼')}：${item.stationcode}`,
+			text: `${t('message.pages.position')}：${item.stationname}，${t('站位代碼')}：${item.stationcode}，${t('機臺型號')}：${item.machinetypes}`,
 			value2: item.stationname,
 			value3: item.line,
+			value4: item.machinetypes,
 		};
 	});
 	// state.tableData.search[1].options = options;
@@ -837,5 +902,15 @@ onMounted(() => {
 }
 :deep(.el-table--default .el-table__cell) {
 	padding: 13px 0 !important;
+}
+.circle {
+	display: inline-block;
+	border: 1px solid red;
+	color: red;
+	width: 54px;
+	height: 22px;
+	font-size: 12px;
+	border-radius: 7px;
+	margin-right: 3px;
 }
 </style>

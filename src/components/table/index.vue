@@ -207,21 +207,24 @@
 						/>
 						<!-- 下拉框 -->
 						<el-select
+							style="width: 100% !important"
 							v-else-if="item.type === 'select'"
 							:clearable="item.clearable"
 							v-model="data[scope.$index][item.key]"
 							:filterable="item.isfilterable"
-							placeholder="請選擇"
+							:placeholder="$t(item.placeholder!) || `${$t('message.pages.pleaseSelect')} ${$t(item.title)}`"
 							remote
-							:reserve-keyword="false"
+							:reserve-keyword="item.reserveKeyword"
 							@change="(item:any) => changeSelect(scope.$index, item)"
 							remote-show-suffix
-							:remote-method="(query:string) => remoteMethod(scope.$index,query)"
+							:remote-method="(query:string) => remoteMethod(scope.$index,query,item)"
 							:loading="item.loading"
 							:multiple="item.multiple"
 							:max-collapse-tags="item.maxCollapseTags"
 							:collapse-tags="item.collapseTags"
 							:collapse-tags-tooltip="item.collapseTagsTooltip"
+							@focus="selectFocus(scope)"
+							@blur="selectBlur(scope)"
 						>
 							<template v-if="item.rowOption">
 								<el-option v-for="i in data[scope.$index][`${item.key}option`]" :key="i.label" :label="i.text" :value="i.value" />
@@ -288,6 +291,7 @@
 							fit="cover"
 						/>
 					</template>
+					<slot name="rowIcons" :row="scope.row" :itemConfig="item" :scopes="scope"></slot>
 					<!-- 鏈接 -->
 					<span v-if="item.type === 'link'">
 						<a target="_blank" href="javascript:;" @click="clickLink(data[scope.$index][item.key + 'Link'])">{{ scope.row[item.key] }}</a>
@@ -324,7 +328,7 @@
 							style="color: #fff"
 							:disabled="scope.row[btn.type + 'Disabled']"
 							v-if="!btn.isSure && !scope.row[btn.type + 'IsShow']"
-							@click="btn.type === 'edit' ? onOpenEdit(btn.type, scope.row) : onOpenOther(scope, btn.type)"
+							@click="btn.type === 'edit' ? onOpenEdit(btn.type, scope.row, scope) : onOpenOther(scope, btn.type)"
 							:color="btn.color"
 							size="small"
 							:type="btn.defaultColor || ''"
@@ -334,14 +338,14 @@
 							{{ $t(btn.name) }}</el-button
 						>
 						<el-button
-							v-if="btn.type === 'del'"
+							v-if="btn.type === 'del' && !scope.row[btn.type + 'IsShow']"
 							:disabled="scope.row.delDisabled"
 							class="button"
 							@click="onDelRow(scope.row, scope.$index)"
 							:color="btn.color"
 							:type="btn.defaultColor"
 							size="small"
-							><el-icon class="btn.icon ? 'mr5' : ''"><ele-Delete /></el-icon>{{ $t(btn.name) }}</el-button
+							><el-icon v-if="btn.icon" class="btn.icon ? 'mr5' : ''"><ele-Delete /></el-icon>{{ $t(btn.name) }}</el-button
 						>
 					</template>
 				</template>
@@ -472,7 +476,17 @@ const emit = defineEmits([
 	'rowClick',
 	'toggleRowExpansion',
 	'handleCurrentChange',
+	'selectFocus',
+	'selectBlur',
 ]);
+// 下拉框獲取焦點時
+const selectFocus = (scope: EmptyObjectType) => {
+	emit('selectFocus', scope);
+};
+// 下拉框失去焦點
+const selectBlur = (scope: EmptyObjectType) => {
+	emit('selectBlur', scope);
+};
 // 點擊單元格一行
 const rowClick = (row: Object, column: Object) => {
 	emit('rowClick', row, column);
@@ -480,8 +494,8 @@ const rowClick = (row: Object, column: Object) => {
 const toggleRowExpansion = (row: any, expanded: any) => {
 	emit('toggleRowExpansion', row);
 };
-const remoteMethod = (index: number, query: string) => {
-	emit('remoteMethod', index, query);
+const remoteMethod = (index: number, query: string, item: EmptyObjectType) => {
+	emit('remoteMethod', index, query, item);
 };
 const handleCurrentChange = (val: any) => {
 	emit('handleCurrentChange', val);
@@ -539,8 +553,8 @@ const onOpentopBtnOther = () => {
 	emit('onOpentopBtnOther', state.selectlist);
 };
 // 打开修改弹窗
-const onOpenEdit = (type: string, row: Object) => {
-	emit('openAdd', type, row);
+const onOpenEdit = (type: string, row: Object, scope: EmptyArrayType) => {
+	emit('openAdd', type, row, scope);
 };
 // 打开送样(其他)弹窗
 const onOpenOther = (scope: EmptyObjectType, type: string) => {
@@ -595,7 +609,7 @@ const onCheckChange = () => {
 //为行设置独有key
 const selRowKey = (row: EmptyObjectType) => {
 	if (!props.config.isSelection && !props.config.expand) return;
-	return row.runid || row.publishId || row.matNo || row.reqNo || row.repairNo || row.idleno || row.uselessno || ' ';
+	return row.linecode || row.runid || row.publishId || row.matNo || row.reqNo || row.repairNo || row.idleno || row.uselessno || ' ';
 };
 // 表格多选改变时，用于导出和删除
 const onSelectionChange = (val: EmptyObjectType[]) => {

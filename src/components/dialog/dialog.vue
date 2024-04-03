@@ -9,6 +9,7 @@
 			:width="dialogWidth"
 		>
 			<slot name="dialogSearch" :datas="state"></slot>
+
 			<el-form v-if="state.dialog.type !== 'imp'" ref="dialogFormRef" :model="state.formData" size="default" :label-width="labelWidth || 'auto'">
 				<el-row :gutter="35">
 					<el-col
@@ -29,6 +30,8 @@
 								:placeholder="$t(item.placeholder) || `${$t('message.pages.pleaseEnter')} ${$t(item.label)}`"
 								clearable
 								:disabled="item.disabled"
+								@blur="(FocusEvent: Event)=>inputBlur(item,FocusEvent)"
+								@focus="(FocusEvent: Event)=>inputFocus(item,FocusEvent)"
 							></el-input>
 							<el-date-picker
 								v-if="item.type === 'date'"
@@ -91,6 +94,7 @@
 								ref="inputuploadRefs"
 								action="#"
 								class="upload"
+								:accept="item.accept"
 								drag
 								:limit="1"
 								:show-file-list="false"
@@ -181,11 +185,12 @@
 						<span v-if="item.type === 'button'">
 							<el-button
 								:disabled="item.disabled"
-								type="primary"
+								:type="item.defaultColor || 'primary'"
 								style="margin-left: 20px"
 								plain
 								v-if="item.type === 'button'"
 								@click="dailogFormButton"
+								:color="item.color"
 								>{{ item.label }}</el-button
 							>
 						</span>
@@ -196,7 +201,7 @@
 			<el-form v-if="state.dialog.type === 'imp'" class="drawer-multiColumn-form" label-width="100px">
 				<el-button size="default" class="buttonBorder mb10" @click="ondownloadTemp" type="primary" plain>{{ $t('下載模板') }}</el-button>
 				<div class="download-form">
-					<el-input v-model="fileListName" placeholder="請點擊瀏覽文件按鈕" />
+					<el-input :readonly="true" v-model="fileListName" placeholder="請點擊瀏覽文件按鈕" />
 					<el-upload
 						v-model:file-list="fileList"
 						:auto-upload="false"
@@ -313,12 +318,11 @@ import { ElMessage, genFileId, UploadRawFile, FormRules, FormInstance, ElMessage
 import type { UploadInstance, UploadProps, UploadUserFile, UploadRequestOptions, UploadFile } from 'element-plus';
 import { FolderOpened } from '@element-plus/icons-vue';
 import { UploadFilled } from '@element-plus/icons-vue';
-import { getUploadFileApi } from '/@/api/global/index';
+import { getUploadFile2S3Api, getUploadFileApi } from '/@/api/global/index';
 import { verifyPhone, verifyTelPhone, verifyEmail, verifiyNumberInteger } from '/@/utils/toolsValidate';
 import { useI18n } from 'vue-i18n';
 import table2excel from 'js-table2excel';
 import { useRouter } from 'vue-router';
-import { RFC_2822 } from 'moment';
 const router = useRouter();
 // 引入组件
 const IconSelector = defineAsyncComponent(() => import('/@/components/iconSelector/index.vue'));
@@ -341,6 +345,8 @@ const emit = defineEmits([
 	'inputHandleChange',
 	'beforeAvatarUpload',
 	'newInputHandleExceed',
+	'inputBlur',
+	'inputFocus',
 ]);
 // 定义父组件传过来的值
 const props = defineProps({
@@ -420,6 +426,14 @@ const state = reactive<dialogFormState>({
 		isdisable: false,
 	},
 });
+// 輸入框失去焦點
+const inputBlur = (item: EmptyObjectType, FocusEvent: Event) => {
+	emit('inputBlur', state.formData, item, FocusEvent);
+};
+// 輸入框獲取焦點
+const inputFocus = (item: EmptyObjectType, FocusEvent: Event) => {
+	emit('inputFocus', state.formData, item, FocusEvent);
+};
 const ondownloadTemp = () => {
 	emit('downloadTemp');
 };
@@ -659,6 +673,9 @@ let times = null;
 // 優化的 文件input框里面的数据
 const newInputHandleChange: UploadProps['onChange'] = async (uploadFile, prop) => {
 	if (!flag) return;
+	// if (uploadFile.type !== 'application/x-zip-compressed' ) {
+	// 	ElMessage.error('文件必須是.zip格式!');return
+	// }
 	dialogFormRef.value?.clearValidate();
 	emit('inputHandleChange', uploadFile, prop, state.formData, dialogFormRef.value);
 	const props = prop + '';
@@ -677,8 +694,15 @@ const getFileData = async (uploadFile: EmptyObjectType, prop: any) => {
 	}, 1000);
 
 	const uploadTypeMap: EmptyObjectType = { programFilePath: 1, lwsFilePath: 2 };
-	const res = await getUploadFileApi(uploadTypeMap[prop + ''], inputuploadForm.value.raw);
-	if (res.code === 203) {
+	let res = null;
+	if (prop === 'programFilePath') {
+		const { projectName, projectCode, productionLineType } = state.formData;
+		res = await getUploadFile2S3Api(projectName, projectCode, productionLineType, uploadTypeMap[prop + ''], inputuploadForm.value.raw);
+	} else {
+		res = await getUploadFileApi(uploadTypeMap[prop + ''], inputuploadForm.value.raw);
+	}
+
+	if (res!.code === 203) {
 		showProgress.value = false;
 		ElMessageBox.confirm(t('程式包已上傳，是否使用上次上傳的文件'), t('message.hint.tips'), {
 			confirmButtonText: t('message.allButton.ok'),
@@ -693,16 +717,16 @@ const getFileData = async (uploadFile: EmptyObjectType, prop: any) => {
 						state.formData[v.prop] = uploadFile.name;
 					}
 				});
-				state.formData[prop + 'fileUrl'] = res.data;
+				state.formData[prop + 'fileUrl'] = res!.data;
 			})
 			.catch(() => {
 				state.formData[prop + 'fileUrl'] = '';
 				state.formData[prop + 'file'] = [];
 				state.formData[prop + ''] = '';
 				showProgress.value = false;
-				ElMessage.warning(res.message);
+				ElMessage.warning(res!.message);
 			});
-	} else if (res.code !== 203 && res.status) {
+	} else if (res!.code !== 203 && res!.status) {
 		uploadPercentage.value = 100;
 		ElMessage.success(`上傳成功`);
 		props.dialogConfig.forEach((v) => {
@@ -710,7 +734,7 @@ const getFileData = async (uploadFile: EmptyObjectType, prop: any) => {
 				state.formData[v.prop] = uploadFile.name;
 			}
 		});
-		state.formData[prop + 'fileUrl'] = res.data;
+		state.formData[prop + 'fileUrl'] = res!.data;
 		showProgress.value = false;
 	} else {
 		state.formData[prop + 'fileUrl'] = '';
@@ -787,7 +811,7 @@ const handleExceed: UploadProps['onExceed'] = (files) => {
 
 // 上传文件
 const submitUpload = () => {
-	uploadRefs.value!.submit();
+	// uploadRefs.value!.submit();
 	emit('importTableData', uploadForm.value);
 	// closeDialog();
 };

@@ -414,6 +414,14 @@ export const staticRoutes: Array<RouteRecordRaw> = [
 			title: '程式發佈详情',
 		},
 	},
+	{
+		path: '/link/kanbanBoardLink',
+		name: 'kanbanBoardLink',
+		component: () => import('/@/views/link/kanbanBoardLink/index.vue'),
+		meta: {
+			title: '平臺看板',
+		},
+	},
 	// {
 	// 	path: '/link/noSearchLink',
 	// 	name: 'noSearchLink',

@@ -7,6 +7,14 @@ export function postPublishQueryPageImportApi(data: Object) {
 		data: data,
 	});
 }
+// 查詢機台導入記錄
+export function postPublishQueryMachineImportApi(data: Object) {
+	return request({
+		url: '/api/Publish/QueryMachineImport',
+		method: 'POST',
+		data: data,
+	});
+}
 // 查詢待導入列表
 export function postPublishQueryWaitImportApi(data: Object) {
 	return request({
@@ -29,5 +37,13 @@ export function postPublishQueryImportStatusApi(data: Object) {
 		url: '/api/Publish/QueryImportStatus',
 		method: 'POST',
 		data: data,
+	});
+}
+// 獲取待導入機台列表
+export function getPublishGetPublishWaitImportMachineListApi(publishId: string) {
+	return request({
+		url: '/api/Publish/GetPublishWaitImportMachineList',
+		method: 'GET',
+		params:{publishId},
 	});
 }

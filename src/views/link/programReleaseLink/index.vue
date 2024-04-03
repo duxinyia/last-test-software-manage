@@ -67,8 +67,8 @@ const state = reactive<TableDemoState>({
 		header: [
 			// { key: 'line', colWidth: '', title: '線體', type: 'text', isCheck: true },
 			{ key: 'stationName', colWidth: '', title: 'message.pages.stationName', type: 'text', isCheck: true },
-			{ key: 'stationCode', colWidth: '', title: '站位代碼', type: 'input', isCheck: true, isRequired: false },
-			// { key: 'machineType', colWidth: '', title: 'message.pages.machineType', type: 'text', isCheck: true },
+			{ key: 'stationCode', colWidth: '', title: '站位代碼', type: 'text', isCheck: true, isRequired: false },
+			{ key: 'machineType', colWidth: '', title: 'message.pages.machineType', type: 'text', isCheck: true },
 		],
 		// 配置项（必传）
 		config: {
@@ -137,7 +137,7 @@ const state = reactive<TableDemoState>({
 			{ type: 'text', label: 'message.pages.programVersion', placeholder: '', prop: 'version', required: false },
 			{ type: 'text', label: 'message.pages.packageSize', placeholder: '', prop: 'fileSize', required: false },
 			{ type: 'text', label: 'message.pages.releaseTime', placeholder: '', prop: 'createTime', required: false },
-			{ type: 'link', label: 'lws', placeholder: '', prop: 'lwsFileName', required: false, xs: 24, sm: 24, md: 24, lg: 24, xl: 24 },
+			{ type: 'link', label: 'LWS', placeholder: '', prop: 'lwsFileName', required: false, xs: 24, sm: 24, md: 24, lg: 24, xl: 24 },
 			{ type: 'text', label: 'message.pages.publishers', placeholder: '', prop: 'creator', required: false },
 			{
 				type: 'text',
@@ -184,8 +184,10 @@ watch(
 // 点击文件
 const clickLink = (prop: string) => {
 	// data[scope.$index][item.key + 'Link']
+	console.log(state.tableData.form);
 	let path = prop === 'programAttName' ? state.tableData.form['filePath'] : state.tableData.form['lwsFilePath'];
-	window.open(`${import.meta.env.MODE === 'development' ? import.meta.env.VITE_API_URL : window.webConfig.webApiBaseUrl}${path}`, '_blank');
+	window.open(path, '_blank');
+	// window.open(`${import.meta.env.MODE === 'development' ? import.meta.env.VITE_API_URL : window.webConfig.webApiBaseUrl}${path}`, '_blank');
 };
 // 初始化数据
 // link/programReleaseLink?comkey=2eca7c4b-6995-4ba4-a596-b5497f214990

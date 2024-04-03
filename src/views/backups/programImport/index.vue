@@ -34,95 +34,70 @@
 				</template> -->
 			</Table>
 			<!-- 新增编辑弹窗 -->
-			<el-dialog
-				v-model="stationDialogVisible"
-				:title="$t('message.pages.programImport')"
-				width="70%"
-				draggable
-				:close-on-click-modal="false"
-				@close="dialogType = 'page'"
-			>
-				<el-tabs v-model="activeName" @tab-click="handleClick">
-					<el-tab-pane v-for="(item, index) in tabs" :key="item.name" :label="item.label" :name="item.name"
-						><el-form :model="dialogState.tableData" size="default">
-							<TableSearch
-								ref="seachFormRef"
-								:search="dialogState.tableData.search"
-								@search="(data) => onSearch(data, dialogState.tableData, dialogTableRef)"
-								:searchConfig="dialogState.tableData.searchConfig"
-							/>
-						</el-form>
-						<el-form ref="tableFormRef" :model="dialogState.tableData" size="default">
-							<Table
-								ref="dialogTableRef"
-								v-bind="dialogState.tableData"
-								class="table-dialog"
-								@pageChange="(page) => onTablePageChange(page, dialogState.tableData, 'import')"
-								@toggleRowExpansion="toggleRowExpansion"
-								@rowClick="toggleRowExpansion"
-								:expandedRowKeys="expandedRowKeys"
-							>
-								<template #expand="{ expandProps }">
-									<el-table
-										ref="singleTableRef"
-										style="padding-bottom: 30px; border: 2px solid #a2d2ff"
-										:data="expandData"
-										v-loading="loading"
-										:header-cell-style="headerCellStyle"
-										:row-key="getRowKey"
-										empty-text="暫無數據"
-										@selection-change="onInnerSelectionChange"
-										:cell-style="cellStyle"
-										@cell-click="cellClick"
-									>
-										<el-table-column type="selection" :reserve-selection="true" width="30" />
-										<el-table-column
-											align="center"
-											v-for="(item, index) in setExpandHeader"
-											:key="item.key"
-											show-overflow-tooltip
-											:prop="item.key"
-											:width="item.colWidth"
-											:label="$t(item.title)"
-										>
-										</el-table-column>
-									</el-table>
-								</template>
-							</Table> </el-form
-					></el-tab-pane>
-				</el-tabs>
-
-				<template #footer>
-					<div class="dialog-footer">
-						<span>
-							<span class="color-danger mr5">*</span>
-							<span>生效時間：</span>
-							<el-date-picker
-								style="margin-right: 15px; height: 30px"
-								v-model="validTime"
-								type="datetime"
-								placeholder="請選擇生效時間"
-								value-format="YYYY-MM-DD HH:mm:ss"
-							/>
-						</span>
-						<el-button
-							size="default"
-							@click="
-								{
-									stationDialogVisible = false;
-									dialogType = 'page';
-								}
-							"
-							>取 消</el-button
-						>
-						<el-button :loading="loadingBtn" size="default" type="primary" @click="addData"> 可下載 </el-button>
-					</div>
+			<Dialog ref="stationDialogRef" @addData="addData" :loadingBtn="loadingBtn" dialogWidth="70%" :isFootBtn="isFootBtn">
+				<template #dialogSearch="{ datas }">
+					<el-form :model="dialogState.tableData" size="default">
+						<TableSearch
+							ref="seachFormRef"
+							:search="dialogState.tableData.search"
+							@search="(data) => onSearch(data, dialogState.tableData, dialogTableRef)"
+							:searchConfig="dialogState.tableData.searchConfig"
+						/>
+					</el-form>
 				</template>
-			</el-dialog>
+				<template #dialogTable="{ datas }">
+					<el-form ref="tableFormRef" :model="dialogState.tableData" size="default">
+						<Table
+							ref="dialogTableRef"
+							v-bind="dialogState.tableData"
+							class="table-dialog"
+							@pageChange="(page) => onTablePageChange(page, dialogState.tableData, datas.dialog.type)"
+							@toggleRowExpansion="toggleRowExpansion"
+							@rowClick="toggleRowExpansion"
+							:expandedRowKeys="expandedRowKeys"
+						>
+							<template #expand="{ expandProps }">
+								<el-table
+									ref="singleTableRef"
+									style="padding-bottom: 30px; border: 2px solid #a2d2ff"
+									:data="expandProps.row.child"
+									v-loading="loading"
+									:header-cell-style="headerCellStyle"
+									empty-text="暫無收貨記錄"
+									@selection-change="onInnerSelectionChange"
+								>
+									<el-table-column type="selection" :reserve-selection="true" width="30" />
+									<el-table-column
+										align="center"
+										v-for="(item, index) in setExpandHeader"
+										:key="index"
+										show-overflow-tooltip
+										:prop="item.key"
+										:width="item.colWidth"
+										:label="$t(item.title)"
+									>
+									</el-table-column>
+								</el-table>
+							</template>
+						</Table>
+					</el-form>
+				</template>
+				<template #dialogOtherFooter="{ datas }">
+					<span class="color-danger mr5">*</span>
+					<span>生效時間：</span>
+					<el-date-picker
+						style="margin-right: 15px; height: 30px"
+						v-model="validTime"
+						type="datetime"
+						placeholder="請選擇生效時間"
+						value-format="YYYY-MM-DD HH:mm:ss"
+					/>
+				</template>
+			</Dialog>
 			<Dialog ref="importStatusDialogRef" :isFootBtn="false" dialogWidth="60%">
 				<template #dialogTable="{ datas }">
 					<el-form ref="tableFormRef" :model="importStatusdialogState.tableData" size="default">
-						<Table v-bind="importStatusdialogState.tableData" class="table-dialog"> </Table>
+						<Table ref="dialogTableRef" v-bind="importStatusdialogState.tableData" class="table-dialog"> </Table>
 					</el-form>
 				</template>
 			</Dialog>
@@ -136,10 +111,8 @@ import { ElMessage, FormInstance } from 'element-plus';
 import { useI18n } from 'vue-i18n';
 import axios from 'axios';
 import {
-	getPublishGetPublishWaitImportMachineListApi,
 	postPublishImportProgramApi,
 	postPublishQueryImportStatusApi,
-	postPublishQueryMachineImportApi,
 	postPublishQueryPageImportApi,
 	postPublishQueryWaitImportApi,
 } from '/@/api/programManagement/programImport';
@@ -148,35 +121,23 @@ const Table = defineAsyncComponent(() => import('/@/components/table/index.vue')
 const TableSearch = defineAsyncComponent(() => import('/@/components/search/search.vue'));
 // 引入组件
 const Dialog = defineAsyncComponent(() => import('/@/components/dialog/dialog.vue'));
-import type { TabsPaneContext } from 'element-plus';
-
-const activeName = ref('first');
-const tabs = ref([
-	{ label: '待導入', name: 'first' },
-	{ label: '導入歷史', name: 'second' },
-]);
-
 // 定义变量内容
 const { t } = useI18n();
 const stationDialogRef = ref();
-const stationDialogVisible = ref(false);
 const tableRef = ref<RefType>();
 const dialogTableRef = ref<RefType>();
 const seachFormRef = ref();
 const loadingBtn = ref(false);
-const loading = ref(true);
+const loading = ref(false);
 const isFootBtn = ref(true);
 const dialogType = ref('page');
-const singleTableRef = ref();
 const validTime = ref('');
 const importStatusDialogRef = ref();
-const expandData = ref([]);
 const setExpandHeader = ref([
-	{ key: 'machineNo', colWidth: '', title: '機臺號', type: 'text', isCheck: true, isRequired: false },
 	{ key: 'line', colWidth: '', title: '線體', type: 'text', isCheck: true, isRequired: false },
-	{ key: 'lineCode', colWidth: '', title: '線體代碼', type: 'text', isCheck: true, isRequired: false },
 	{ key: 'stationName', colWidth: '', title: 'message.pages.stationName', type: 'text', isCheck: true, isRequired: false },
 	{ key: 'stationCode', colWidth: '', title: '站位代碼', type: 'text', isCheck: true, isRequired: false },
+	{ key: 'machineNo', colWidth: '', title: '機臺號', type: 'text', isCheck: true, isRequired: false },
 	{ key: 'machineType', colWidth: '', title: '機臺類型', type: 'text', isCheck: true, isRequired: false },
 ]);
 const state = reactive<TableDemoState>({
@@ -189,7 +150,7 @@ const state = reactive<TableDemoState>({
 			{ key: 'projectCode', colWidth: '', title: 'message.pages.projectCode', type: 'text', isCheck: true },
 			{ key: 'productionLineType', colWidth: '', title: 'message.pages.productionlinetype', type: 'text', isCheck: true },
 			{ key: 'stage', colWidth: '', title: 'message.pages.stage', type: 'text', isCheck: true },
-			{ key: 'programName', colWidth: '', title: 'message.pages.programName', type: 'text', isCheck: false },
+			{ key: 'programName', colWidth: '', title: 'message.pages.programName', type: 'text', isCheck: true },
 			{
 				key: 'programType',
 				colWidth: '',
@@ -204,27 +165,8 @@ const state = reactive<TableDemoState>({
 			},
 			{ key: 'version', colWidth: '', title: 'message.pages.programVersion', type: 'text', isCheck: true },
 			{ key: 'fileSize', colWidth: '', title: 'message.pages.packageSize', type: 'text', isCheck: true },
-
-			{ key: 'createtime', colWidth: '', title: '導入時間', type: 'text', isCheck: false },
-			{ key: 'line', colWidth: '', title: '線體', type: 'text', isCheck: true },
-			{ key: 'stationName', colWidth: '', title: 'message.pages.stationName', type: 'text', isCheck: true },
-			{ key: 'stationCode', colWidth: '', title: 'message.pages.stationCode', type: 'text', isCheck: false },
-			{ key: 'machineType', colWidth: '', title: '機臺類型', type: 'text', isCheck: false },
-			{ key: 'machineno', colWidth: '', title: '機臺號', type: 'text', isCheck: true },
-
-			{
-				key: 'importStatus',
-				colWidth: '',
-				title: '導入狀態',
-				type: 'text',
-				isCheck: true,
-				transfer: {
-					0: '未下載',
-					1: '已下載',
-					2: '已導入',
-				},
-			},
 			{ key: 'validTime', colWidth: '', title: '生效時間', type: 'text', isCheck: true },
+			{ key: 'createtime', colWidth: '', title: '導入時間', type: 'text', isCheck: true },
 		],
 		// 配置项（必传）
 		config: {
@@ -233,10 +175,10 @@ const state = reactive<TableDemoState>({
 			isBorder: false, // 是否显示表格边框
 			isSerialNo: true, // 是否显示表格序号
 			isSelection: false, // 是否显示表格多选
-			isOperate: false, // 是否显示表格操作栏
+			isOperate: true, // 是否显示表格操作栏
 			isButton: true, //是否显示表格上面的新增删除按钮
 			isInlineEditing: false, //是否是行内编辑
-			isTopTool: true, //是否有表格右上角工具
+			isTopTool: false, //是否有表格右上角工具
 			isPage: true, //是否有分页
 			operateWidth: 150,
 			isBulkDeletionBtn: false,
@@ -296,7 +238,7 @@ const dialogState = reactive<TableDemoState>({
 			},
 			{ key: 'version', colWidth: '', title: 'message.pages.programVersion', type: 'text', isCheck: true },
 			{ key: 'fileSize', colWidth: '', title: 'message.pages.packageSize', type: 'text', isCheck: true },
-			// { key: 'lwsFileName', colWidth: '', title: 'LWS文件名', type: 'text', isCheck: true },
+			{ key: 'lwsFileName', colWidth: '', title: 'LWS文件名', type: 'text', isCheck: true },
 			{ key: 'signOvertime', colWidth: '', title: '簽核完成時間', type: 'text', isCheck: true },
 			// { key: 'downloadStatus', colWidth: '', title: '下載狀態', type: 'text', isCheck: true },
 		],
@@ -323,7 +265,7 @@ const dialogState = reactive<TableDemoState>({
 		search: [
 			{ label: 'message.pages.projectName', placeholder: '', prop: 'projectName', required: false, type: 'input' },
 			{ label: 'message.pages.projectCode', placeholder: '', prop: 'projectCode', required: false, type: 'input' },
-			{ label: '版本號', placeholder: '', prop: 'version', required: false, type: 'input' },
+			{ label: 'message.pages.programName', prop: 'programName', required: false, type: 'input' },
 		],
 		searchConfig: {
 			isSearchBtn: true,
@@ -396,61 +338,21 @@ const importStatusdialogState = reactive<TableDemoState>({
 		},
 	},
 });
-// 切換标签
-const handleClick = (tab: TabsPaneContext, event: Event) => {
-	activeName.value = tab.paneName;
-	dialogState.tableData.form = {};
-	if (tab.paneName === 'second') {
-		seachFormRef.value[1].onReset();
-		dialogTableRef.value[1]?.pageReset();
-	} else {
-		seachFormRef.value[0].onReset();
-		dialogTableRef.value[0]?.pageReset();
-	}
-};
 // 单元格字体颜色
-const cellStyle = ({ row, column }: EmptyObjectType) => {
+const cellStyle = ({ column }: EmptyObjectType) => {
 	const property = column.property;
 	if (property === 'version') {
 		return { color: 'var(--el-color-primary)', cursor: 'pointer', 'text-decoration': 'underline' };
-	} else if (row.index + 1 && (property === 'line' || property === 'stationName')) {
-		return { color: 'var(--el-color-primary)', cursor: 'pointer' };
-	} else if (property === 'importStatus') {
-		// 導入狀態
-		let colorMap: EmptyObjectType = { 0: 'var(--el-color-danger)', 1: 'var(--el-color-success)', 2: 'var(--el-color-primary)' };
-		let fontColor = colorMap[row.importStatus];
-		return { color: fontColor };
-	}
-};
-// 点击单元格触发row, column
-const cellClick = (row: EmptyObjectType, column: EmptyObjectType) => {
-	if (column.property === 'line') {
-		expandData.value.forEach((item: any) => {
-			if (activeName.value === 'first') {
-				singleTableRef.value[2]!.toggleRowSelection(item, item.lineCode === row.lineCode ? true : false);
-			} else {
-				singleTableRef.value[3]!.toggleRowSelection(item, item.lineCode === row.lineCode ? true : false);
-			}
-		});
-	} else if (column.property === 'stationName') {
-		expandData.value.forEach((item: any) => {
-			if (activeName.value === 'first') {
-				singleTableRef.value[2]!.toggleRowSelection(item, item.stationCode === row.stationCode ? true : false);
-			} else {
-				singleTableRef.value[3]!.toggleRowSelection(item, item.stationCode === row.stationCode ? true : false);
-			}
-		});
 	}
 };
 // 點擊版本下載文件
 const versionClick = (row: EmptyObjectType, column: EmptyObjectType) => {
 	if (column.property === 'version') {
-		if (row.filepath && row.filepath.includes('/')) {
-			// window.open(
-			// 	`${import.meta.env.MODE === 'development' ? import.meta.env.VITE_API_URL : window.webConfig.webApiBaseUrl}${row.filePath}`,
-			// 	'_blank'
-			// );
-			window.open(`${row.filepath}`, '_blank');
+		if (row.filePath && row.filePath.includes('/')) {
+			window.open(
+				`${import.meta.env.MODE === 'development' ? import.meta.env.VITE_API_URL : window.webConfig.webApiBaseUrl}${row.filePath}`,
+				'_blank'
+			);
 		} else {
 			ElMessage.warning(t('暫無程式包或者程式包錯誤'));
 		}
@@ -468,13 +370,9 @@ const remove = (array: any[], val: any) => {
 	}
 	return false;
 };
-const getRowKey = (row: EmptyObjectType) => {
-	return row.index;
-};
 // 展開行
 const expandedRowKeys = ref<string[]>([]);
 const toggleRowExpansion = async (row: EmptyObjectType, falg?: number) => {
-	loading.value = true;
 	if (row.publishId && !remove(expandedRowKeys.value, row.publishId)) {
 		// 實現手風琴展開
 		expandedRowKeys.value = [];
@@ -482,13 +380,13 @@ const toggleRowExpansion = async (row: EmptyObjectType, falg?: number) => {
 	}
 	// 先判断该行是否已经展开了
 	if (!row.expand) {
-		const res = await getPublishGetPublishWaitImportMachineListApi(row.publishId);
-		loading.value = false;
-		res.data.forEach((item: any, index: number) => {
-			item.index = index;
+		dialogState.tableData.data.forEach((item: any, index: any) => {
+			// 找到当前点击的行，把动态获取到的数据赋值进去
+			if (item.publishId === row.publishId) {
+				dialogState.tableData.data[index].child = item.stationMachines;
+				row.expand = true;
+			}
 		});
-		expandData.value = res.data;
-		row.expand = true;
 	} else if (falg === 1) {
 		expandedRowKeys.value = [];
 	} else {
@@ -513,7 +411,7 @@ const getTableData = async (datas: EmptyObjectType) => {
 			page: state.tableData.page,
 		};
 		delete data.importTime;
-		res = await postPublishQueryMachineImportApi(data);
+		res = await postPublishQueryPageImportApi(data);
 		// const importStatusMap: EmptyObjectType = {
 		// 	0: '未下載',
 		// 	1: '已下載',
@@ -529,14 +427,12 @@ const getTableData = async (datas: EmptyObjectType) => {
 			...form,
 			page: dialogState.tableData.page,
 		};
-		// data.version = activeName.value === 'first' ? '' : form.version;
-		data.importStatus = activeName.value === 'first' ? 0 : 1;
 		res = await postPublishQueryWaitImportApi(data);
 		res.data.data.forEach((item: any) => {
 			// item.downloadStatus = '未下載';
-			// item.stationMachines.forEach((mat: any) => {
-			// 	mat.publishId = item.publishId;
-			// });
+			item.stationMachines.forEach((mat: any) => {
+				mat.publishId = item.publishId;
+			});
 		});
 	}
 	datas.data = res!.data.data;
@@ -548,24 +444,17 @@ const getTableData = async (datas: EmptyObjectType) => {
 // 搜索点击时表单回调
 const onSearch = (data: EmptyObjectType, tableData: EmptyObjectType, tablesRef: any) => {
 	tableData.form = Object.assign({}, tableData.form, { ...data });
-	if (activeName.value === 'first' && dialogType.value === 'import') {
-		tablesRef[0]?.pageReset();
-	} else if (activeName.value === 'second' && dialogType.value === 'import') {
-		tablesRef[1]?.pageReset();
-	} else {
-		tablesRef?.pageReset();
-	}
+	tablesRef?.pageReset();
 };
 
-// 打开程式導入弹窗
+// 打开新增編輯弹窗
 const openDialog = (type: string, row: EmptyObjectType) => {
 	expandedRowKeys.value = [];
 	validTime.value = '';
-	// stationDialogRef.value.openDialog('import', row, 'message.pages.programImport', '可下載');
-	stationDialogVisible.value = true;
+	stationDialogRef.value.openDialog('import', row, 'message.pages.programImport', '導入');
 	dialogType.value = 'import';
 	dialogState.tableData.form = {};
-	if (seachFormRef.value) seachFormRef?.value[0].onReset();
+	if (seachFormRef.value) seachFormRef?.value.onReset();
 	getTableData(dialogState.tableData);
 };
 // 打開查看導入狀態彈窗
@@ -584,29 +473,25 @@ const lookImportStatus = async (scope: EmptyObjectType, type: string) => {
 	}
 };
 // 導入數據
-const addData = async () => {
+const addData = async (ruleForm: EmptyObjectType, type: string) => {
 	let data = selectList.value;
 	if (!validTime.value) return ElMessage.warning(t('請填寫生效時間'));
 	if (data.length <= 0) return ElMessage.warning(t('請選擇要導入的專案'));
 	loadingBtn.value = true;
 	const stationList = data.map((item) => {
 		return {
-			publishId: item.publishId,
 			line: item.line,
 			machineType: item.machineType,
 			stationCode: item.stationCode,
 			stationName: item.stationName,
 			machineNo: item.machineNo,
-			lineCode: item.lineCode,
-			importStatus: item.importStatus,
 		};
 	});
 	const res = await postPublishImportProgramApi({ publishId: data[0].publishId, stationList, validTime: validTime.value });
 	if (res.status) {
 		ElMessage.success(t(`導入成功`));
 		dialogType.value = 'page';
-		stationDialogVisible.value = false;
-		// stationDialogRef.value.closeDialog();
+		stationDialogRef.value.closeDialog();
 		getTableData(state.tableData);
 	}
 	loadingBtn.value = false;
@@ -641,9 +526,5 @@ onMounted(() => {
 }
 .popover-table :deep(thead .el-table__cell) {
 	color: var(--el-text-color-primary) !important;
-}
-:deep(.el-tabs__item) {
-	font-weight: 700;
-	font-size: 14px;
 }
 </style>

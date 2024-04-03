@@ -25,11 +25,11 @@ export function putLineUpdateLineApi(data: Object) {
 	});
 }
 // 刪除線體
-export function deleteLineDeleteLineApi(runId: string) {
+export function deleteLineDeleteLineApi(lineCode: string) {
 	return request({
 		url: `/api/Line/DeleteLine`,
 		method: 'DELETE',
-    params:{runId}
+    params:{lineCode}
 	});
 }
 // 線體綁定站位
@@ -62,5 +62,21 @@ export function postLineQueryPageBoundStationApi(data: Object) {
 		url: '/api/Line/QueryPageBoundStation',
 		method: 'POST',
 		data: data,
+	});
+}
+// 查詢機台（不分頁）
+export function postMachineQueryNoPageApi(data?: Object) {
+	return request({
+		url: '/api/Machine/QueryNoPage',
+		method: 'POST',
+		data: data,
+	});
+}
+// 獲取線體詳情
+export function getLineApi(lineCode?: string) {
+	return request({
+		url: '/api/Line/GetLine',
+		method: 'GET',
+		params: {lineCode},
 	});
 }

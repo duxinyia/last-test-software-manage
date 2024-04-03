@@ -80,7 +80,7 @@ export function getMachineQueryNoPageApi(machineTypeName: string) {
 	});
 }
 // 查询站位（不分頁）
-export function getStationQueryNoPageApi(stationName: string) {
+export function getStationQueryNoPageApi(stationName?: string) {
 	return request({
 		url: '/api/Station/QueryNoPage',
 		method: 'GET',
@@ -117,5 +117,37 @@ export function deleteProjectDeleteStationMachineApi(runId: string) {
 		url: `/api/Project/DeleteStationMachine`,
 		method: 'DELETE',
     params:{runId}
+	});
+}
+// 獲取線體-站位-機台詳情列表
+export function postLineGetLineDetailListApi(data: EmptyArrayType) {
+	return request({
+		url: '/api/Line/GetLineDetailList',
+		method: 'POST',
+		data: data,
+	});
+}
+// 獲取專案線體-站位-機台列表
+export function getProjectLineMachineListApi(projectId: string) {
+	return request({
+		url: '/api/Project/GetProjectLineMachineList',
+		method: 'GET',
+		params:{projectId},
+	});
+}
+// 刪除專案的線體
+export function deleteProjectDeleteProjectLineApi(projectId: string,lineCode: string) {
+	return request({
+		url: `/api/Project/DeleteProjectLine`,
+		method: 'DELETE',
+    params:{projectId,lineCode}
+	});
+}
+// 專案增加線體
+export function postProjectAddProjectLineApi(data: Object) {
+	return request({
+		url: '/api/Project/AddProjectLine',
+		method: 'POST',
+		data: data,
 	});
 }
