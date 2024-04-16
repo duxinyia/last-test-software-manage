@@ -386,7 +386,7 @@ const selectLinedialogState = reactive<TableDemoState>({
 		// 表头内容（必传，注意格式）
 		header: [
 			{ key: 'line', colWidth: '', title: '線體名稱', type: 'text', isCheck: true, isRequired: false },
-			{ key: 'linecode', colWidth: '', title: '線體代碼', type: 'input', isCheck: true, isRequired: false },
+			{ key: 'linecode', colWidth: '', title: '線體代碼', type: 'text', isCheck: true, isRequired: false },
 		],
 		// 配置项（必传）
 		config: {

@@ -660,6 +660,7 @@ const newInputHandleExceed: UploadProps['onExceed'] = (files, prop) => {
 		flag = true;
 		return;
 	}
+	inputuploadForm.value = files[0];
 	getFileData(files[0], prop);
 	emit('newInputHandleExceed', files, prop, state.formData);
 	flag = true;
@@ -763,10 +764,11 @@ watch(
 
 // 查看上传的文件
 const lookUpload = (prop: string) => {
-	window.open(
-		`${import.meta.env.MODE === 'development' ? import.meta.env.VITE_API_URL : window.webConfig.webApiBaseUrl}${state.formData[prop + 'fileUrl']}`,
-		'_blank'
-	);
+	// window.open(
+	// 	`${import.meta.env.MODE === 'development' ? import.meta.env.VITE_API_URL : window.webConfig.webApiBaseUrl}${state.formData[prop + 'fileUrl']}`,
+	// 	'_blank'
+	// );
+	window.open(`${state.formData[prop + 'fileUrl']}`, '_blank');
 };
 // // 上传错误提示
 // const handleError = () => {

@@ -11,6 +11,7 @@
 				@sortHeader="onSortHeader"
 				@openAdd="openDialog"
 				@onOpenOtherDialog="openBindDialog"
+				@onOpentopBtnOther="onOpentopBtnOther"
 			/>
 			<!-- 新增编辑弹窗 -->
 			<Dialog
@@ -22,7 +23,7 @@
 				:isFootBtn="isFootBtn"
 			>
 			</Dialog>
-			<!-- 綁定彈窗 -->
+			<!-- 綁定彈窗（没用了） -->
 			<Dialog ref="bindDialogRef" dialogWidth="50%" @addData="onBind" :isFootBtn="isFootBtn">
 				<template #dialogTable="{ datas }">
 					<el-form ref="tableFormRef" :model="dialogState.tableData" size="default">
@@ -37,6 +38,8 @@
 					</el-form>
 				</template>
 			</Dialog>
+			<!-- 导入弹窗 -->
+			<Dialog ref="importDialogRef" :isFootBtn="false" dialogWidth="40%" @downloadTemp="downloadTemp" @importTableData="submitUpload"> </Dialog>
 		</div>
 	</div>
 </template>
@@ -54,7 +57,9 @@ import {
 	postStationQueryPageNotBoundMachineApi,
 	postStationBindMachineApi,
 	postStationUnbindMachineApi,
+	postStationImportStationApi,
 } from '/@/api/basicInformation/position';
+import { getUploadFileApi } from '/@/api/global';
 // 引入组件
 const Table = defineAsyncComponent(() => import('/@/components/table/index.vue'));
 const TableSearch = defineAsyncComponent(() => import('/@/components/search/search.vue'));
@@ -67,6 +72,7 @@ const tableRef = ref<RefType>();
 const loadingBtn = ref(false);
 const isFootBtn = ref(true);
 const bindDialogRef = ref();
+const importDialogRef = ref();
 const state = reactive<TableDemoState>({
 	tableData: {
 		// 列表数据（必传）
@@ -91,7 +97,10 @@ const state = reactive<TableDemoState>({
 			operateWidth: 180,
 			isBulkDeletionBtn: false,
 		},
-		topBtnConfig: [{ type: 'add', name: 'message.pages.addStation', defaultColor: 'primary', isSure: true, disabled: true }],
+		topBtnConfig: [
+			{ type: 'add', name: 'message.pages.addStation', defaultColor: 'primary', isSure: true, disabled: true },
+			{ type: 'import', name: '批量導入', defaultColor: 'success', isSure: true, disabled: true },
+		],
 		btnConfig: [
 			// { type: 'bind', name: '綁定機台', isSure: false, icon: '', defaultColor: 'success' },
 			// { type: 'unbind', name: '解綁機台', isSure: false, icon: '', color: '#dc362e' },
@@ -203,6 +212,29 @@ const dialogState = reactive<TableDemoState>({
 		dialogConfig: [],
 	},
 });
+// 打開批量導入彈窗
+const onOpentopBtnOther = () => {
+	importDialogRef.value.openDialog('imp', {}, '導入');
+};
+// 下載模板
+const downloadTemp = () => {
+	window.open(
+		`${import.meta.env.MODE === 'development' ? import.meta.env.VITE_API_URL : window.webConfig.webApiBaseUrl}/站位數據導入模板.xlsx`,
+		'_blank'
+	);
+};
+// 上传文件
+const submitUpload = async (formEl: EmptyObjectType | undefined) => {
+	const res = await getUploadFileApi(0, formEl!.raw);
+	if (res.status) {
+		const res1 = await postStationImportStationApi(res.data);
+		if (res1.status) {
+			ElMessage.success(res1.message);
+			importDialogRef.value.closeDialog();
+			getTableData();
+		}
+	}
+};
 // 初始化列表数据
 const getTableData = async () => {
 	state.tableData.config.loading = true;
@@ -351,5 +383,8 @@ onMounted(() => {
 			overflow: hidden;
 		}
 	}
+}
+:deep(.download-form) {
+	margin-bottom: 50px !important;
 }
 </style>

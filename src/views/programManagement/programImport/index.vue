@@ -1,7 +1,85 @@
 <template>
-	<div class="table-container layout-padding">
-		<div class="table-padding layout-padding-view layout-padding-auto">
+	<el-tabs class="table-container layout-padding" v-model="activeName" @tab-click="handleClick">
+		<el-tab-pane
+			class="table-padding layout-padding-view layout-padding-auto"
+			v-for="item in tabs"
+			:key="item.name"
+			:label="item.label"
+			:name="item.name"
+		>
 			<TableSearch
+				ref="seachFormRef"
+				:search="dialogState.tableData.search"
+				@search="(data) => onSearch(data, dialogState.tableData, dialogTableRef)"
+				:searchConfig="dialogState.tableData.searchConfig"
+				labelWidth="70px"
+			/>
+			<!-- <el-form ref="tableFormRef" :model="dialogState.tableData" size="default"> -->
+			<Table
+				ref="dialogTableRef"
+				v-bind="dialogState.tableData"
+				class="table"
+				@pageChange="(page) => onTablePageChange(page, dialogState.tableData, 'import')"
+				@toggleRowExpansion="toggleRowExpansion"
+				@rowClick="toggleRowExpansion"
+				:expandedRowKeys="expandedRowKeys"
+				@onOpenOtherDialog="openDetailDialog"
+				@onOpentopBtnOther="openDialog"
+			>
+				<template #expand="{ expandProps }">
+					<el-table
+						ref="singleTableRef"
+						style="padding-bottom: 30px; border: 2px solid #a2d2ff"
+						:data="expandData"
+						v-loading="loading"
+						:header-cell-style="headerCellStyle"
+						:row-key="getRowKey"
+						empty-text="暫無數據"
+						@selection-change="onInnerSelectionChange"
+						:cell-style="cellStyle"
+						@cell-click="cellClick"
+					>
+						<el-table-column type="selection" :reserve-selection="true" width="30" />
+						<el-table-column
+							align="center"
+							v-for="(item, index) in setExpandHeader"
+							:key="item.key"
+							show-overflow-tooltip
+							:prop="item.key"
+							:width="item.colWidth"
+							:label="$t(item.title)"
+						>
+						</el-table-column>
+					</el-table>
+				</template>
+			</Table>
+			<!-- </el-form> -->
+			<div class="dialog-footer">
+				<span>
+					<span class="color-danger mr5">*</span>
+					<span>生效時間：</span>
+					<el-date-picker
+						style="margin-right: 15px; height: 30px"
+						v-model="validTime"
+						type="datetime"
+						placeholder="請選擇生效時間"
+						value-format="YYYY-MM-DD HH:mm:ss"
+					/>
+				</span>
+				<el-button :loading="loadingBtn" size="default" type="primary" @click="addData"> 可下載 </el-button>
+			</div>
+		</el-tab-pane>
+		<!-- 新增编辑弹窗 -->
+		<el-dialog
+			v-model="stationDialogVisible"
+			:title="$t('導入記錄')"
+			width="80%"
+			draggable
+			:close-on-click-modal="false"
+			@close="dialogType = 'import'"
+		>
+			<TableSearch
+				ref="seachDialogFormRef"
 				:search="state.tableData.search"
 				@search="(data) => onSearch(data, state.tableData, tableRef)"
 				:searchConfig="state.tableData.searchConfig"
@@ -12,122 +90,24 @@
 				class="table"
 				@pageChange="(page) => onTablePageChange(page, state.tableData, 'page')"
 				@sortHeader="onSortHeader"
-				@openAdd="openDialog"
 				:cellStyle="cellStyle"
 				@cellclick="versionClick"
 				@onOpenOtherDialog="lookImportStatus"
 			>
-				<!-- <template #slotCol="{ row }">
-					<el-popover placement="bottom-start" width="40%" trigger="hover">
-						<el-table class="popover-table" :data="row.stationMachines" style="width: 100%" stripe max-height="250">
-							<el-table-column show-overflow-tooltip align="center" prop="line" :label="$t('線體')" />
-							<el-table-column show-overflow-tooltip align="center" prop="stationName" :label="$t('message.pages.stationName')" />
-							<el-table-column show-overflow-tooltip align="center" prop="stationCode" :label="$t('站位代碼')" />
-							<el-table-column show-overflow-tooltip align="center" prop="machineNo" :label="$t('機臺號')" />
-							<el-table-column show-overflow-tooltip align="center" prop="machineType" :label="$t('message.pages.machineType')" />
-							<el-table-column show-overflow-tooltip align="center" prop="importStatus" :label="$t('導入狀態')" />
-						</el-table>
-						<template #reference>
-							<span style="text-align: center; width: 100%; cursor: pointer; color: #0047c5"> {{ row.projectName }} </span>
-						</template>
-					</el-popover>
-				</template> -->
 			</Table>
-			<!-- 新增编辑弹窗 -->
-			<el-dialog
-				v-model="stationDialogVisible"
-				:title="$t('message.pages.programImport')"
-				width="70%"
-				draggable
-				:close-on-click-modal="false"
-				@close="dialogType = 'page'"
-			>
-				<el-tabs v-model="activeName" @tab-click="handleClick">
-					<el-tab-pane v-for="(item, index) in tabs" :key="item.name" :label="item.label" :name="item.name"
-						><el-form :model="dialogState.tableData" size="default">
-							<TableSearch
-								ref="seachFormRef"
-								:search="dialogState.tableData.search"
-								@search="(data) => onSearch(data, dialogState.tableData, dialogTableRef)"
-								:searchConfig="dialogState.tableData.searchConfig"
-							/>
-						</el-form>
-						<el-form ref="tableFormRef" :model="dialogState.tableData" size="default">
-							<Table
-								ref="dialogTableRef"
-								v-bind="dialogState.tableData"
-								class="table-dialog"
-								@pageChange="(page) => onTablePageChange(page, dialogState.tableData, 'import')"
-								@toggleRowExpansion="toggleRowExpansion"
-								@rowClick="toggleRowExpansion"
-								:expandedRowKeys="expandedRowKeys"
-							>
-								<template #expand="{ expandProps }">
-									<el-table
-										ref="singleTableRef"
-										style="padding-bottom: 30px; border: 2px solid #a2d2ff"
-										:data="expandData"
-										v-loading="loading"
-										:header-cell-style="headerCellStyle"
-										:row-key="getRowKey"
-										empty-text="暫無數據"
-										@selection-change="onInnerSelectionChange"
-										:cell-style="cellStyle"
-										@cell-click="cellClick"
-									>
-										<el-table-column type="selection" :reserve-selection="true" width="30" />
-										<el-table-column
-											align="center"
-											v-for="(item, index) in setExpandHeader"
-											:key="item.key"
-											show-overflow-tooltip
-											:prop="item.key"
-											:width="item.colWidth"
-											:label="$t(item.title)"
-										>
-										</el-table-column>
-									</el-table>
-								</template>
-							</Table> </el-form
-					></el-tab-pane>
-				</el-tabs>
-
-				<template #footer>
-					<div class="dialog-footer">
-						<span>
-							<span class="color-danger mr5">*</span>
-							<span>生效時間：</span>
-							<el-date-picker
-								style="margin-right: 15px; height: 30px"
-								v-model="validTime"
-								type="datetime"
-								placeholder="請選擇生效時間"
-								value-format="YYYY-MM-DD HH:mm:ss"
-							/>
-						</span>
-						<el-button
-							size="default"
-							@click="
-								{
-									stationDialogVisible = false;
-									dialogType = 'page';
-								}
-							"
-							>取 消</el-button
-						>
-						<el-button :loading="loadingBtn" size="default" type="primary" @click="addData"> 可下載 </el-button>
-					</div>
-				</template>
-			</el-dialog>
-			<Dialog ref="importStatusDialogRef" :isFootBtn="false" dialogWidth="60%">
-				<template #dialogTable="{ datas }">
-					<el-form ref="tableFormRef" :model="importStatusdialogState.tableData" size="default">
-						<Table v-bind="importStatusdialogState.tableData" class="table-dialog"> </Table>
-					</el-form>
-				</template>
-			</Dialog>
-		</div>
-	</div>
+		</el-dialog>
+		<Dialog ref="importStatusDialogRef" :isFootBtn="false" dialogWidth="60%">
+			<template #dialogTable="{ datas }">
+				<el-form ref="tableFormRef" :model="importStatusdialogState.tableData" size="default">
+					<Table v-bind="importStatusdialogState.tableData" class="table-dialog"> </Table>
+				</el-form>
+			</template>
+		</Dialog>
+		<!-- 詳情彈窗 -->
+		<el-dialog draggable :close-on-click-modal="false" v-model="detaildialogVisible" :title="$t('message.pages.programReleaseDetails')" width="45%"
+			><programReleaseDetailDialog :isDialog="true" :checkNoRef="checkNoRef"
+		/></el-dialog>
+	</el-tabs>
 </template>
 
 <script setup lang="ts" name="programImport">
@@ -140,7 +120,6 @@ import {
 	postPublishImportProgramApi,
 	postPublishQueryImportStatusApi,
 	postPublishQueryMachineImportApi,
-	postPublishQueryPageImportApi,
 	postPublishQueryWaitImportApi,
 } from '/@/api/programManagement/programImport';
 // 引入组件
@@ -148,12 +127,15 @@ const Table = defineAsyncComponent(() => import('/@/components/table/index.vue')
 const TableSearch = defineAsyncComponent(() => import('/@/components/search/search.vue'));
 // 引入组件
 const Dialog = defineAsyncComponent(() => import('/@/components/dialog/dialog.vue'));
+const programReleaseDetailDialog = defineAsyncComponent(() => import('/@/views/link/programReleaseLink/index.vue'));
 import type { TabsPaneContext } from 'element-plus';
-
+import { getPublishDetailApi } from '/@/api/programManagement/programRelease';
+const detaildialogVisible = ref(false);
+const checkNoRef = ref();
 const activeName = ref('first');
 const tabs = ref([
 	{ label: '待導入', name: 'first' },
-	{ label: '導入歷史', name: 'second' },
+	{ label: '歷史版本', name: 'second' },
 ]);
 
 // 定义变量内容
@@ -163,10 +145,10 @@ const stationDialogVisible = ref(false);
 const tableRef = ref<RefType>();
 const dialogTableRef = ref<RefType>();
 const seachFormRef = ref();
+const seachDialogFormRef = ref();
 const loadingBtn = ref(false);
 const loading = ref(true);
-const isFootBtn = ref(true);
-const dialogType = ref('page');
+const dialogType = ref('import');
 const singleTableRef = ref();
 const validTime = ref('');
 const importStatusDialogRef = ref();
@@ -234,16 +216,17 @@ const state = reactive<TableDemoState>({
 			isSerialNo: true, // 是否显示表格序号
 			isSelection: false, // 是否显示表格多选
 			isOperate: false, // 是否显示表格操作栏
-			isButton: true, //是否显示表格上面的新增删除按钮
+			isButton: false, //是否显示表格上面的新增删除按钮
 			isInlineEditing: false, //是否是行内编辑
 			isTopTool: true, //是否有表格右上角工具
 			isPage: true, //是否有分页
 			operateWidth: 150,
 			isBulkDeletionBtn: false,
+			height: 570,
 		},
 		topBtnConfig: [{ type: 'add', name: 'message.pages.programImport', defaultColor: 'primary', isSure: true, disabled: true }],
 		btnConfig: [
-			{ type: 'detail', name: '查看導入狀態', isSure: false, icon: 'ele-View', defaultColor: 'success' },
+			// { type: 'detail', name: '查看導入狀態', isSure: false, icon: 'ele-View', defaultColor: 'success' },
 			// { type: 'del', name: 'message.allButton.deleteBtn', isSure: true, defaultColor: 'danger' },
 		],
 		// 搜索表单，动态生成（传空数组时，将不显示搜索，注意格式）
@@ -296,9 +279,7 @@ const dialogState = reactive<TableDemoState>({
 			},
 			{ key: 'version', colWidth: '', title: 'message.pages.programVersion', type: 'text', isCheck: true },
 			{ key: 'fileSize', colWidth: '', title: 'message.pages.packageSize', type: 'text', isCheck: true },
-			// { key: 'lwsFileName', colWidth: '', title: 'LWS文件名', type: 'text', isCheck: true },
 			{ key: 'signOvertime', colWidth: '', title: '簽核完成時間', type: 'text', isCheck: true },
-			// { key: 'downloadStatus', colWidth: '', title: '下載狀態', type: 'text', isCheck: true },
 		],
 		// 配置项（必传）
 		config: {
@@ -307,18 +288,18 @@ const dialogState = reactive<TableDemoState>({
 			isBorder: false, // 是否显示表格边框
 			isSerialNo: true, // 是否显示表格序号
 			isSelection: false, // 是否显示表格多选
-			isOperate: false, // 是否显示表格操作栏
+			isOperate: true, // 是否显示表格操作栏
 			isButton: true, //是否显示表格上面的新增删除按钮
 			isInlineEditing: false, //是否是行内编辑
 			isTopTool: false, //是否有表格右上角工具
 			isPage: true, //是否有分页
-			operateWidth: 220,
+			operateWidth: 110,
 			isBulkDeletionBtn: false,
-			height: 500,
+			// height: 530,
 			expand: true,
 		},
-		topBtnConfig: [],
-		btnConfig: [],
+		topBtnConfig: [{ type: 'record', name: '導入記錄', defaultColor: 'primary', isSure: true, disabled: true }],
+		btnConfig: [{ type: 'detail', name: '詳情', isSure: false, icon: 'ele-View', defaultColor: 'success' }],
 		// 搜索表单，动态生成（传空数组时，将不显示搜索，注意格式）
 		search: [
 			{ label: 'message.pages.projectName', placeholder: '', prop: 'projectName', required: false, type: 'input' },
@@ -378,8 +359,7 @@ const importStatusdialogState = reactive<TableDemoState>({
 			isTopTool: false, //是否有表格右上角工具
 			isPage: true, //是否有分页
 			operateWidth: 220,
-
-			height: 500,
+			// height: 500,
 		},
 		topBtnConfig: [],
 		btnConfig: [],
@@ -398,7 +378,7 @@ const importStatusdialogState = reactive<TableDemoState>({
 });
 // 切換标签
 const handleClick = (tab: TabsPaneContext, event: Event) => {
-	activeName.value = tab.paneName;
+	activeName.value = tab.paneName as string;
 	dialogState.tableData.form = {};
 	if (tab.paneName === 'second') {
 		seachFormRef.value[1].onReset();
@@ -446,10 +426,6 @@ const cellClick = (row: EmptyObjectType, column: EmptyObjectType) => {
 const versionClick = (row: EmptyObjectType, column: EmptyObjectType) => {
 	if (column.property === 'version') {
 		if (row.filepath && row.filepath.includes('/')) {
-			// window.open(
-			// 	`${import.meta.env.MODE === 'development' ? import.meta.env.VITE_API_URL : window.webConfig.webApiBaseUrl}${row.filePath}`,
-			// 	'_blank'
-			// );
 			window.open(`${row.filepath}`, '_blank');
 		} else {
 			ElMessage.warning(t('暫無程式包或者程式包錯誤'));
@@ -471,23 +447,32 @@ const remove = (array: any[], val: any) => {
 const getRowKey = (row: EmptyObjectType) => {
 	return row.index;
 };
+// 打開詳情彈窗
+const openDetailDialog = async (scope: EmptyObjectType, type: string) => {
+	if (type === 'detail') {
+		const res = await getPublishDetailApi(scope.row.publishId);
+		checkNoRef.value = res.data;
+		detaildialogVisible.value = true;
+	}
+};
 // 展開行
 const expandedRowKeys = ref<string[]>([]);
-const toggleRowExpansion = async (row: EmptyObjectType, falg?: number) => {
+const toggleRowExpansion = async (row: EmptyObjectType, column: EmptyObjectType, falg?: number) => {
+	if (column.property === 'operation') return;
 	loading.value = true;
 	if (row.publishId && !remove(expandedRowKeys.value, row.publishId)) {
 		// 實現手風琴展開
 		expandedRowKeys.value = [];
 		expandedRowKeys.value.push(row.publishId);
-	}
-	// 先判断该行是否已经展开了
-	if (!row.expand) {
 		const res = await getPublishGetPublishWaitImportMachineListApi(row.publishId);
 		loading.value = false;
 		res.data.forEach((item: any, index: number) => {
 			item.index = index;
 		});
 		expandData.value = res.data;
+	}
+	// 先判断该行是否已经展开了
+	if (!row.expand) {
 		row.expand = true;
 	} else if (falg === 1) {
 		expandedRowKeys.value = [];
@@ -514,22 +499,11 @@ const getTableData = async (datas: EmptyObjectType) => {
 		};
 		delete data.importTime;
 		res = await postPublishQueryMachineImportApi(data);
-		// const importStatusMap: EmptyObjectType = {
-		// 	0: '未下載',
-		// 	1: '已下載',
-		// 	2: '已導入',
-		// };
-		// res.data.data.forEach((item: any) => {
-		// 	item.stationMachines.forEach((machine: any) => {
-		// 		machine.importStatus = importStatusMap[machine.importStatus];
-		// 	});
-		// });
 	} else {
 		let data: EmptyObjectType = {
 			...form,
 			page: dialogState.tableData.page,
 		};
-		// data.version = activeName.value === 'first' ? '' : form.version;
 		data.importStatus = activeName.value === 'first' ? 0 : 1;
 		res = await postPublishQueryWaitImportApi(data);
 		res.data.data.forEach((item: any) => {
@@ -559,14 +533,13 @@ const onSearch = (data: EmptyObjectType, tableData: EmptyObjectType, tablesRef: 
 
 // 打开程式導入弹窗
 const openDialog = (type: string, row: EmptyObjectType) => {
-	expandedRowKeys.value = [];
-	validTime.value = '';
-	// stationDialogRef.value.openDialog('import', row, 'message.pages.programImport', '可下載');
+	// expandedRowKeys.value = [];
+	// validTime.value = '';
 	stationDialogVisible.value = true;
-	dialogType.value = 'import';
-	dialogState.tableData.form = {};
-	if (seachFormRef.value) seachFormRef?.value[0].onReset();
-	getTableData(dialogState.tableData);
+	dialogType.value = 'page';
+	state.tableData.form = {};
+	if (seachDialogFormRef.value) seachDialogFormRef?.value.onReset();
+	getTableData(state.tableData);
 };
 // 打開查看導入狀態彈窗
 const lookImportStatus = async (scope: EmptyObjectType, type: string) => {
@@ -604,10 +577,14 @@ const addData = async () => {
 	const res = await postPublishImportProgramApi({ publishId: data[0].publishId, stationList, validTime: validTime.value });
 	if (res.status) {
 		ElMessage.success(t(`導入成功`));
-		dialogType.value = 'page';
-		stationDialogVisible.value = false;
+		dialogType.value = 'import';
+		// stationDialogVisible.value = false;
 		// stationDialogRef.value.closeDialog();
-		getTableData(state.tableData);
+		singleTableRef.value[2]!.clearSelection();
+		singleTableRef.value[3]!.clearSelection();
+		getTableData(dialogState.tableData);
+		expandedRowKeys.value = [];
+		validTime.value = '';
 	}
 	loadingBtn.value = false;
 };
@@ -625,7 +602,7 @@ const onSortHeader = (data: TableHeaderType[]) => {
 
 // 页面加载时
 onMounted(() => {
-	getTableData(state.tableData);
+	getTableData(dialogState.tableData);
 });
 </script>
 
@@ -645,5 +622,13 @@ onMounted(() => {
 :deep(.el-tabs__item) {
 	font-weight: 700;
 	font-size: 14px;
+}
+.dialog-footer {
+	display: flex;
+	justify-content: flex-end;
+	margin-top: 20px;
+}
+:deep(.el-tabs__content) {
+	height: 100%;
 }
 </style>

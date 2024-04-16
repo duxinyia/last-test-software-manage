@@ -64,3 +64,11 @@ export function postStationQueryPageBoundMachineApi(data: Object) {
 		data: data,
 	});
 }
+// 導入站位
+export function postStationImportStationApi(filePath: string) {
+	return request({
+		url: '/api/Station/ImportStation',
+		method: 'POST',
+		params:{filePath}
+	});
+}

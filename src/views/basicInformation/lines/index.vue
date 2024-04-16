@@ -34,10 +34,15 @@
 							@selectFocus="onSelectFocus"
 							@delRow="onDelRow"
 						>
+							<template #topButton v-if="dialogType === 'add'">
+								<el-button size="default" class="ml10" type="success" plain @click="onOpentopBtnOther">{{ $t('批量導入') }}</el-button>
+							</template>
 						</Table>
 					</el-form>
 				</template>
 			</Dialog>
+			<!-- 导入弹窗 -->
+			<Dialog ref="importDialogRef" :isFootBtn="false" dialogWidth="40%" @downloadTemp="downloadTemp" @importTableData="submitUpload"> </Dialog>
 			<!-- 綁定彈窗 -->
 			<Dialog ref="bindDialogRef" dialogWidth="50%" @addData="onBind" :isFootBtn="isFootBtn">
 				<template #dialogTable="{ datas }">
@@ -73,8 +78,10 @@ import {
 	postLineUnBindStationApi,
 	postMachineQueryNoPageApi,
 	getLineApi,
+	postLineImportStationMachineApi,
 } from '/@/api/basicInformation/lines';
 import { getStationQueryNoPageApi } from '/@/api/projectConfiguration/projectManage';
+import { getUploadFileApi } from '/@/api/global';
 // 引入组件
 const Table = defineAsyncComponent(() => import('/@/components/table/index.vue'));
 const TableSearch = defineAsyncComponent(() => import('/@/components/search/search.vue'));
@@ -89,6 +96,7 @@ const isFootBtn = ref(true);
 const bindDialogRef = ref();
 const lineDialogTableRef = ref();
 const lineDialogTableFormRef = ref();
+const importDialogRef = ref();
 const state = reactive<TableDemoState>({
 	tableData: {
 		// 列表数据（必传）
@@ -288,6 +296,30 @@ const lineDialogState = reactive<TableDemoState>({
 		dialogConfig: [],
 	},
 });
+// 打開批量導入彈窗
+const onOpentopBtnOther = () => {
+	importDialogRef.value.openDialog('imp', {}, '導入');
+};
+// 下載模板
+const downloadTemp = () => {
+	window.open(
+		`${import.meta.env.MODE === 'development' ? import.meta.env.VITE_API_URL : window.webConfig.webApiBaseUrl}/線體導入站位機台模板.xlsx`,
+		'_blank'
+	);
+};
+// 上传文件
+const submitUpload = async (formEl: EmptyObjectType | undefined) => {
+	const res = await getUploadFileApi(0, formEl!.raw);
+	if (res.status) {
+		const res1 = await postLineImportStationMachineApi(res.data);
+		if (res1.status) {
+			importDialogRef.value.closeDialog();
+			let datas = lineDialogState.tableData;
+			datas.data = res1.data;
+			ElMessage.success('導入成功');
+		}
+	}
+};
 // 得到未綁定或者已綁定站位 unbind:點擊了解綁按鈕拿到已綁定的站位
 const getStationData = async (type: string) => {
 	let data = {
@@ -324,17 +356,27 @@ const onSearch = (data: EmptyObjectType) => {
 	tableRef.value?.pageReset();
 };
 let dialogType = '';
+let openDialogRow: EmptyObjectType = {};
 // 打开新增編輯弹窗
 const openDialog = async (type: string, row: EmptyObjectType) => {
 	dialogType = type;
+	openDialogRow = row;
 	stationDialogRef.value.openDialog(type, row, 'message.pages.line');
 	let datas = lineDialogState.tableData;
-
 	if (type === 'add') {
 		datas.data = [{ stationCode: '', machineNoList: [] }];
 	} else {
 		const res = await getLineApi(row.linecode);
 		datas.data = res.data.stationMachineList;
+		let allCode: EmptyArrayType = [];
+		datas.header[0].option.forEach((o: any) => {
+			allCode.push(o.stationcode);
+		});
+		datas.data.forEach((item, index) => {
+			if (!allCode.includes(item.stationCode)) {
+				datas.data[index].stationCode = item.stationName;
+			}
+		});
 	}
 };
 let oldData: EmptyObjectType = {};
@@ -501,7 +543,7 @@ const remoteMethod = (index: number, query: string, currentItem: EmptyObjectType
 					datas.data[index].stationCode = query;
 				}
 			} else {
-				const res = await postMachineQueryNoPageApi({ machineNo: query });
+				const res = await postMachineQueryNoPageApi(query);
 				datas.header.forEach((item: any) => {
 					if (item.key === 'machineNoList') {
 						item.loading = false;
@@ -590,5 +632,8 @@ onMounted(async () => {
 			overflow: hidden;
 		}
 	}
+}
+:deep(.download-form) {
+	margin-bottom: 50px !important;
 }
 </style>

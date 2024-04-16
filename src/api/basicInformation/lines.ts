@@ -65,11 +65,11 @@ export function postLineQueryPageBoundStationApi(data: Object) {
 	});
 }
 // 查詢機台（不分頁）
-export function postMachineQueryNoPageApi(data?: Object) {
+export function postMachineQueryNoPageApi(machineNo?: string) {
 	return request({
 		url: '/api/Machine/QueryNoPage',
 		method: 'POST',
-		data: data,
+		params: {machineNo},
 	});
 }
 // 獲取線體詳情
@@ -78,5 +78,13 @@ export function getLineApi(lineCode?: string) {
 		url: '/api/Line/GetLine',
 		method: 'GET',
 		params: {lineCode},
+	});
+}
+// 導入站位和機台
+export function postLineImportStationMachineApi(filePath: string) {
+	return request({
+		url: '/api/Line/LineImportStationMachine',
+		method: 'POST',
+		params:{filePath}
 	});
 }

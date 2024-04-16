@@ -40,6 +40,7 @@
 					><el-icon class="mr5"><ele-Plus /></el-icon>{{ $t('message.allButton.addBtn') }}</el-button
 				>
 			</div>
+			<slot name="topButton"></slot>
 			<div class="table-top-tool" v-if="config.isTopTool">
 				<!-- <SvgIcon name="iconfont icon-dayinji" :size="19" title="打印" @click="onPrintTable" /> -->
 				<!-- <SvgIcon name="iconfont icon-btn-daoru" :size="22" :title="$t('message.tooltip.import')" @click="onImportTable('imp')" /> -->
@@ -314,6 +315,7 @@
 				</template>
 			</el-table-column>
 			<el-table-column
+				prop="operation"
 				fixed="right"
 				align="right"
 				header-align="center"
@@ -491,8 +493,8 @@ const selectBlur = (scope: EmptyObjectType) => {
 const rowClick = (row: Object, column: Object) => {
 	emit('rowClick', row, column);
 };
-const toggleRowExpansion = (row: any, expanded: any) => {
-	emit('toggleRowExpansion', row);
+const toggleRowExpansion = (row: any, column: Object, expanded: any) => {
+	emit('toggleRowExpansion', row, column);
 };
 const remoteMethod = (index: number, query: string, item: EmptyObjectType) => {
 	emit('remoteMethod', index, query, item);

@@ -742,7 +742,7 @@ const addData = async (ruleForm: EmptyObjectType, type: string) => {
 		fileSize,
 		filePath,
 	} = ruleForm;
-	// console.log(stationName);
+	// console.log(programFilePathfile[0]);
 
 	stationName = stationName.map((item: any) => {
 		return { stationName: item.split('|')[0], stationCode: item.split('|')[1], machineType: item.split('|')[2] };
@@ -784,11 +784,14 @@ const addData = async (ruleForm: EmptyObjectType, type: string) => {
 			getTableData();
 		}
 	} else {
+		if (programFilePathfile) {
+			fileSize = Number((programFilePathfile[0].size / (1024 * 1024)).toFixed(2));
+		}
 		const editData = {
 			publishId,
 			programType,
 			stage,
-			fileSize: Number((programFilePathfile[0].size / (1024 * 1024)).toFixed(2)),
+			fileSize,
 			stationList: stationName || stationMachines,
 			version,
 			programFilePath: programFilePathfileUrl,

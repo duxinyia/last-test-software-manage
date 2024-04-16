@@ -10,10 +10,13 @@ import ElementPlus from 'element-plus';
 import '/@/theme/index.scss';
 import VueGridLayout from 'vue-grid-layout';
 import 'virtual:svg-icons-register'
+import datav from "@iamzzg/data-view/dist/vue3/datav.map.vue.esm";
+
+
 
 const app = createApp(App);
 
 directive(app);
 other.elSvg(app);
 
-app.use(pinia).use(router).use(ElementPlus).use(i18n).use(VueGridLayout).mount('#app');
+app.use(datav).use(pinia).use(router).use(ElementPlus).use(i18n).use(VueGridLayout).mount('#app');
