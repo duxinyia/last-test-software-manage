@@ -255,7 +255,7 @@ const state = reactive<TableDemoState>({
 				isCheck: true,
 			},
 			{
-				label: '選擇線體',
+				label: 'message.pages.selectLineBody',
 				prop: 'lineBtn',
 				placeholder: '',
 				required: true,
@@ -279,12 +279,12 @@ const dialogState = reactive<TableDemoState>({
 		data: [],
 		// 表头内容（必传，注意格式）
 		header: [
-			{ key: 'linecode', colWidth: '', title: '線體代碼', type: 'text', isCheck: true, isRequired: false },
-			{ key: 'line', colWidth: '', title: '線體名稱', type: 'text', isCheck: true, isRequired: false },
-			{ key: 'stationcode', colWidth: '', title: '站位代碼', type: 'text', isCheck: true, isRequired: false },
+			{ key: 'linecode', colWidth: '', title: 'message.pages.lineCode', type: 'text', isCheck: true, isRequired: false },
+			{ key: 'line', colWidth: '', title: 'message.pages.lineName', type: 'text', isCheck: true, isRequired: false },
+			{ key: 'stationcode', colWidth: '', title: 'message.pages.stationCode', type: 'text', isCheck: true, isRequired: false },
 			{ key: 'stationname', colWidth: '', title: 'message.pages.stationName', type: 'text', isCheck: true, isRequired: false },
-			{ key: 'machineno', colWidth: '', title: '機臺號', type: 'text', isCheck: true, isRequired: false },
-			{ key: 'machinetype', colWidth: '', title: '機臺類型', type: 'text', isCheck: true, isRequired: false },
+			{ key: 'machineno', colWidth: '', title: 'message.pages.machineNumber', type: 'text', isCheck: true, isRequired: false },
+			{ key: 'machinetype', colWidth: '', title: 'message.pages.machineType', type: 'text', isCheck: true, isRequired: false },
 		],
 		// 配置项（必传）
 		config: {
@@ -308,7 +308,7 @@ const dialogState = reactive<TableDemoState>({
 		search: [],
 		dialogConfig: [
 			{
-				label: '線體',
+				label: 'message.pages.line',
 				prop: 'line',
 				placeholder: '',
 				required: true,
@@ -339,7 +339,7 @@ const dialogState = reactive<TableDemoState>({
 				isCheck: true,
 			},
 			{
-				label: '站位代碼',
+				label: 'message.pages.stationCode',
 				prop: 'stationcode',
 				placeholder: '',
 				required: true,
@@ -385,8 +385,8 @@ const selectLinedialogState = reactive<TableDemoState>({
 		data: [],
 		// 表头内容（必传，注意格式）
 		header: [
-			{ key: 'line', colWidth: '', title: '線體名稱', type: 'text', isCheck: true, isRequired: false },
-			{ key: 'linecode', colWidth: '', title: '線體代碼', type: 'text', isCheck: true, isRequired: false },
+			{ key: 'line', colWidth: '', title: 'message.pages.lineName', type: 'text', isCheck: true, isRequired: false },
+			{ key: 'linecode', colWidth: '', title: 'message.pages.lineCode', type: 'text', isCheck: true, isRequired: false },
 		],
 		// 配置项（必传）
 		config: {
@@ -523,7 +523,7 @@ const selectLinedialogState = reactive<TableDemoState>({
 // });
 // 點擊選擇線體按鈕
 const dailogSelectLineButton = async () => {
-	selectLineDialogRef.value.openDialog('line', {}, '選擇線體', '確 定');
+	selectLineDialogRef.value.openDialog('line', {}, t('message.pages.selectLineBody'), 'message.allButton.ok');
 	selectLinedialogState.tableData.config.loading = true;
 	let data = {
 		page: selectLinedialogState.tableData.page,
@@ -544,7 +544,7 @@ let noPageTbaleData: EmptyArrayType = [];
 // 選擇好線體提交
 const lineSubmit = async () => {
 	if (selectList.value.length <= 0) {
-		ElMessage.warning(t(`請選擇線體`));
+		ElMessage.warning(t(`message.hint.pleaseSelectTheLineBody`));
 		return;
 	}
 	let linecodes: EmptyArrayType = [];
@@ -563,7 +563,7 @@ const lineSubmit = async () => {
 				dialogState.tableData.page.pageNum * dialogState.tableData.page.pageSize
 			);
 			dialogState.tableData.config.loading = false;
-			ElMessage.success(`操作成功`);
+			ElMessage.success(t(`message.hint.successfulOperation`));
 		}
 	} else {
 		const addres = await postProjectAddProjectLineApi({ projectId, lineCodeList: linecodes });
@@ -579,7 +579,7 @@ const lineSubmit = async () => {
 			// 		dialogState.tableData.page.pageNum * dialogState.tableData.page.pageSize
 			// 	);
 
-			ElMessage.success(`操作成功`);
+			ElMessage.success(t(`message.hint.successfulOperation`));
 			// }
 		}
 		dialogState.tableData.config.loading = false;
@@ -613,6 +613,7 @@ const changeType = (type: string, isShow: boolean, operateBtn: EmptyArrayType, o
 		if (item.type === 'button' && type != 'detail') {
 			item.isCheck = isShow;
 		}
+		item.isCheck = item.type === 'button' && type === 'detail' ? false : true;
 		item.type = type === 'detail' ? 'text' : item.standbyType;
 		item.required = isShow;
 	});
@@ -623,9 +624,9 @@ const changeType = (type: string, isShow: boolean, operateBtn: EmptyArrayType, o
 
 //彈窗删除
 const onDelRow = async (row: EmptyObjectType, i: number) => {
-	ElMessageBox.confirm(`確定刪除線體：<span style="color:red">${row.row.line}</span>?`, '提示', {
-		confirmButtonText: '確 定',
-		cancelButtonText: '取 消',
+	ElMessageBox.confirm(`${t('message.pages.determineTheDeletionLine')}：<span style="color:red">${row.row.line}</span>?`, t('message.hint.tips'), {
+		confirmButtonText: t('message.allButton.ok'),
+		cancelButtonText: t('message.allButton.cancel'),
 		dangerouslyUseHTMLString: true, // 注意此属性
 		type: 'warning',
 		draggable: true,
@@ -696,7 +697,7 @@ const openDialog = (type: string, row: EmptyObjectType) => {
 	dialogState.tableData.page.pageNum = 1;
 	dialogState.tableData.page.pageSize = 10;
 	positionRow = row;
-	changeType(type, true, [{ type: 'dels', name: 'message.allButton.deleteBtn', color: '#D33939', isSure: false }], 90);
+	changeType(type, true, [{ type: 'dels', name: 'message.allButton.deleteBtn', color: '#D33939', isSure: false }], 100);
 	projectDialogRef.value.openDialog(type, row, 'message.pages.project');
 	dialogType = type;
 	if (type != 'add') {

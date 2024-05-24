@@ -35,31 +35,54 @@ service.interceptors.request.use(
 	}
 );
 
+const readFileAsPromise= (response:any)=> {
+	return new Promise((resolve, reject) => {
+		const result: any = response.data;
+		const reader: any = new FileReader();
+		reader.readAsText(result);
+		reader.onload = (e:any)=>{
+			resolve(e.target.result)
+		};
+		});
+}
 // 添加响应拦截器
 service.interceptors.response.use(
-	(response) => {
+	async(response) => {
 		checkResponse(response);
-		if(response.request.responseType==='blob')
-		return response;
-		// 对响应数据做点什么
-		const res = response.data;
-		if (res.code && res.code !== 0) {
-			// `token` 过期或者账号已在别处登录
-			if (res.code === 401 || res.code === 4001) {
-				 ElMessageBox.alert('登錄過期,您已被登出,請重新登錄', '提示', {})
-				.then(() => {})
-				.catch(() => {});
-				Session.clear(); // 清除浏览器全部临时缓存
-				Local.clear();
-				// 使用 reload 时，不需要调用 resetRoute() 重置路由
-				window.location.reload();
-			}else if(res.code===500||res.Code===500){
-				ElMessage.error(res.message||res.Message);
+		if(response.request.responseType==='blob'){
+		const readFile=await readFileAsPromise(response)
+		// console.log(readFile);
+			try {
+				const resData = JSON.parse(readFile as string); // 解析对象成功，说明是json数据
+				if (resData.code != 200) {
+					ElMessage.error(resData.message);				
+					return resData
+				}
+			} catch (err) {								
+					return response;
 			}
-			return res;
-		} else {
-			return res;
 		}
+		
+					// const res =response.request.responseType==='blob'?response: response.data;
+					const res = response.data;
+					if (res.code && res.code !== 0) {
+						// `token` 过期或者账号已在别处登录
+						if (res.code === 401 || res.code === 4001) {
+							 ElMessageBox.alert('登錄過期,您已被登出,請重新登錄', '提示', {})
+							.then(() => {})
+							.catch(() => {});
+							Session.clear(); // 清除浏览器全部临时缓存
+							Local.clear();
+							// 使用 reload 时，不需要调用 resetRoute() 重置路由
+							window.location.reload();
+						}else if(res.code===500||res.Code===500){
+							ElMessage.error(res.message||res.Message);
+						}
+						return res;
+					} else {
+						return res;
+					}
+
 	},
 	 async(error) => {
 		// 对响应错误做点什么	

@@ -94,12 +94,12 @@ const state = reactive<TableDemoState>({
 			isInlineEditing: false, //是否是行内编辑
 			isTopTool: false, //是否有表格右上角工具
 			isPage: true, //是否有分页
-			operateWidth: 180,
+			operateWidth: 200,
 			isBulkDeletionBtn: false,
 		},
 		topBtnConfig: [
 			{ type: 'add', name: 'message.pages.addStation', defaultColor: 'primary', isSure: true, disabled: true },
-			{ type: 'import', name: '批量導入', defaultColor: 'success', isSure: true, disabled: true },
+			{ type: 'import', name: 'message.pages.bulkImport', defaultColor: 'success', isSure: true, disabled: true },
 		],
 		btnConfig: [
 			// { type: 'bind', name: '綁定機台', isSure: false, icon: '', defaultColor: 'success' },

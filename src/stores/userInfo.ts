@@ -11,6 +11,7 @@ export const useUserInfo = defineStore('userInfo', {
 			userName: '',
 			userId:'',
 			userPassword:'',
+			isSign:1,
 			time: 0,
 			roles: [],
 			authBtnList: [],
@@ -33,6 +34,7 @@ export const useUserInfo = defineStore('userInfo', {
 					const userName = Cookies.get('userName');
 					const userId = Cookies.get('userId');	
 					const userPassword=Cookies.get('userPassword')
+					const isSign=Session.get('isSign')
 					let defaultRoles: Array<string> = [];
 					let defaultAuthBtnList: Array<string> = [];
 					// admin 页面权限标识，对应路由 meta.roles，用于控制路由的显示/隐藏
@@ -55,6 +57,7 @@ export const useUserInfo = defineStore('userInfo', {
 					const userInfos = {
 						userName: userName,
 						userId:userId,
+						isSign:isSign,
 						time: new Date().getTime(),
 						roles: defaultRoles,
 						authBtnList: defaultAuthBtnList,

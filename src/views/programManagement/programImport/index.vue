@@ -4,7 +4,7 @@
 			class="table-padding layout-padding-view layout-padding-auto"
 			v-for="item in tabs"
 			:key="item.name"
-			:label="item.label"
+			:label="t(item.label)"
 			:name="item.name"
 		>
 			<TableSearch
@@ -12,7 +12,7 @@
 				:search="dialogState.tableData.search"
 				@search="(data) => onSearch(data, dialogState.tableData, dialogTableRef)"
 				:searchConfig="dialogState.tableData.searchConfig"
-				labelWidth="70px"
+				labelWidth=" "
 			/>
 			<!-- <el-form ref="tableFormRef" :model="dialogState.tableData" size="default"> -->
 			<Table
@@ -34,7 +34,7 @@
 						v-loading="loading"
 						:header-cell-style="headerCellStyle"
 						:row-key="getRowKey"
-						empty-text="暫無數據"
+						:empty-text="t('message.hint.nodata')"
 						@selection-change="onInnerSelectionChange"
 						:cell-style="cellStyle"
 						@cell-click="cellClick"
@@ -57,22 +57,22 @@
 			<div class="dialog-footer">
 				<span>
 					<span class="color-danger mr5">*</span>
-					<span>生效時間：</span>
+					<span>{{ $t('message.pages.effectiveTime') }}：</span>
 					<el-date-picker
 						style="margin-right: 15px; height: 30px"
 						v-model="validTime"
 						type="datetime"
-						placeholder="請選擇生效時間"
+						:placeholder="t('message.pages.pleaseSelectAnEffectiveTime')"
 						value-format="YYYY-MM-DD HH:mm:ss"
 					/>
 				</span>
-				<el-button :loading="loadingBtn" size="default" type="primary" @click="addData"> 可下載 </el-button>
+				<el-button :loading="loadingBtn" size="default" type="primary" @click="addData"> {{ $t('message.pages.downloadable') }} </el-button>
 			</div>
 		</el-tab-pane>
 		<!-- 新增编辑弹窗 -->
 		<el-dialog
 			v-model="stationDialogVisible"
-			:title="$t('導入記錄')"
+			:title="$t('message.pages.importRecord')"
 			width="80%"
 			draggable
 			:close-on-click-modal="false"
@@ -134,8 +134,8 @@ const detaildialogVisible = ref(false);
 const checkNoRef = ref();
 const activeName = ref('first');
 const tabs = ref([
-	{ label: '待導入', name: 'first' },
-	{ label: '歷史版本', name: 'second' },
+	{ label: 'message.pages.toBeImported', name: 'first' },
+	{ label: 'message.pages.historicalVersion', name: 'second' },
 ]);
 
 // 定义变量内容
@@ -154,12 +154,12 @@ const validTime = ref('');
 const importStatusDialogRef = ref();
 const expandData = ref([]);
 const setExpandHeader = ref([
-	{ key: 'machineNo', colWidth: '', title: '機臺號', type: 'text', isCheck: true, isRequired: false },
-	{ key: 'line', colWidth: '', title: '線體', type: 'text', isCheck: true, isRequired: false },
-	{ key: 'lineCode', colWidth: '', title: '線體代碼', type: 'text', isCheck: true, isRequired: false },
+	{ key: 'machineNo', colWidth: '', title: 'message.pages.machineNumber', type: 'text', isCheck: true, isRequired: false },
+	{ key: 'line', colWidth: '', title: 'message.pages.line', type: 'text', isCheck: true, isRequired: false },
+	{ key: 'lineCode', colWidth: '', title: 'message.pages.lineCode', type: 'text', isCheck: true, isRequired: false },
 	{ key: 'stationName', colWidth: '', title: 'message.pages.stationName', type: 'text', isCheck: true, isRequired: false },
-	{ key: 'stationCode', colWidth: '', title: '站位代碼', type: 'text', isCheck: true, isRequired: false },
-	{ key: 'machineType', colWidth: '', title: '機臺類型', type: 'text', isCheck: true, isRequired: false },
+	{ key: 'stationCode', colWidth: '', title: 'message.pages.stationCode', type: 'text', isCheck: true, isRequired: false },
+	{ key: 'machineType', colWidth: '', title: 'message.pages.machineType1', type: 'text', isCheck: true, isRequired: false },
 ]);
 const state = reactive<TableDemoState>({
 	tableData: {
@@ -187,26 +187,25 @@ const state = reactive<TableDemoState>({
 			{ key: 'version', colWidth: '', title: 'message.pages.programVersion', type: 'text', isCheck: true },
 			{ key: 'fileSize', colWidth: '', title: 'message.pages.packageSize', type: 'text', isCheck: true },
 
-			{ key: 'createtime', colWidth: '', title: '導入時間', type: 'text', isCheck: false },
-			{ key: 'line', colWidth: '', title: '線體', type: 'text', isCheck: true },
+			{ key: 'createtime', colWidth: '', title: 'message.pages.importTime', type: 'text', isCheck: false },
+			{ key: 'line', colWidth: '', title: 'message.pages.line', type: 'text', isCheck: true },
 			{ key: 'stationName', colWidth: '', title: 'message.pages.stationName', type: 'text', isCheck: true },
 			{ key: 'stationCode', colWidth: '', title: 'message.pages.stationCode', type: 'text', isCheck: false },
-			{ key: 'machineType', colWidth: '', title: '機臺類型', type: 'text', isCheck: false },
-			{ key: 'machineno', colWidth: '', title: '機臺號', type: 'text', isCheck: true },
-
+			{ key: 'machineType', colWidth: '', title: 'message.pages.machineType1', type: 'text', isCheck: false },
+			{ key: 'machineno', colWidth: '', title: 'message.pages.machineNumber', type: 'text', isCheck: true },
 			{
 				key: 'importStatus',
 				colWidth: '',
-				title: '導入狀態',
+				title: 'message.pages.importingState',
 				type: 'text',
 				isCheck: true,
 				transfer: {
-					0: '未下載',
-					1: '已下載',
-					2: '已導入',
+					0: 'message.pages.notDownloaded',
+					1: 'message.pages.downloaded',
+					2: 'message.pages.imported',
 				},
 			},
-			{ key: 'validTime', colWidth: '', title: '生效時間', type: 'text', isCheck: true },
+			{ key: 'validTime', colWidth: '', title: 'message.pages.effectiveTime', type: 'text', isCheck: true },
 		],
 		// 配置项（必传）
 		config: {
@@ -234,9 +233,9 @@ const state = reactive<TableDemoState>({
 			{ label: 'message.pages.projectName', placeholder: '', prop: 'projectName', required: false, type: 'input' },
 			{ label: 'message.pages.projectCode', placeholder: '', prop: 'projectCode', required: false, type: 'input' },
 			{ label: 'message.pages.stationName', prop: 'stationName', required: false, type: 'input' },
-			{ label: '站位代碼', placeholder: '', prop: 'stationCode', required: false, type: 'input' },
-			{ label: '機臺號', placeholder: '', prop: 'machineNo', required: false, type: 'input' },
-			{ label: '導入時間', prop: 'importTime', required: false, type: 'dateRange' },
+			{ label: 'message.pages.stationCode', placeholder: '', prop: 'stationCode', required: false, type: 'input' },
+			{ label: 'message.pages.machineNumber', placeholder: '', prop: 'machineNo', required: false, type: 'input' },
+			{ label: 'message.pages.importTime', prop: 'importTime', required: false, type: 'dateRange' },
 		],
 		searchConfig: {
 			isSearchBtn: true,
@@ -279,7 +278,7 @@ const dialogState = reactive<TableDemoState>({
 			},
 			{ key: 'version', colWidth: '', title: 'message.pages.programVersion', type: 'text', isCheck: true },
 			{ key: 'fileSize', colWidth: '', title: 'message.pages.packageSize', type: 'text', isCheck: true },
-			{ key: 'signOvertime', colWidth: '', title: '簽核完成時間', type: 'text', isCheck: true },
+			{ key: 'signOvertime', colWidth: '', title: 'message.pages.signatureCompletionTime', type: 'text', isCheck: true },
 		],
 		// 配置项（必传）
 		config: {
@@ -293,18 +292,18 @@ const dialogState = reactive<TableDemoState>({
 			isInlineEditing: false, //是否是行内编辑
 			isTopTool: false, //是否有表格右上角工具
 			isPage: true, //是否有分页
-			operateWidth: 110,
+			operateWidth: 120,
 			isBulkDeletionBtn: false,
 			// height: 530,
 			expand: true,
 		},
-		topBtnConfig: [{ type: 'record', name: '導入記錄', defaultColor: 'primary', isSure: true, disabled: true }],
-		btnConfig: [{ type: 'detail', name: '詳情', isSure: false, icon: 'ele-View', defaultColor: 'success' }],
+		topBtnConfig: [{ type: 'record', name: 'message.pages.importRecord', defaultColor: 'primary', isSure: true, disabled: true }],
+		btnConfig: [{ type: 'detail', name: 'message.pages.detail', isSure: false, icon: 'ele-View', defaultColor: 'success' }],
 		// 搜索表单，动态生成（传空数组时，将不显示搜索，注意格式）
 		search: [
 			{ label: 'message.pages.projectName', placeholder: '', prop: 'projectName', required: false, type: 'input' },
 			{ label: 'message.pages.projectCode', placeholder: '', prop: 'projectCode', required: false, type: 'input' },
-			{ label: '版本號', placeholder: '', prop: 'version', required: false, type: 'input' },
+			{ label: 'message.pages.versionNumber', placeholder: '', prop: 'version', required: false, type: 'input' },
 		],
 		searchConfig: {
 			isSearchBtn: true,
@@ -428,7 +427,7 @@ const versionClick = (row: EmptyObjectType, column: EmptyObjectType) => {
 		if (row.filepath && row.filepath.includes('/')) {
 			window.open(`${row.filepath}`, '_blank');
 		} else {
-			ElMessage.warning(t('暫無程式包或者程式包錯誤'));
+			ElMessage.warning(t('message.hint.thereAreNoPackagesOrPackageErrors'));
 		}
 	}
 };
@@ -559,8 +558,8 @@ const lookImportStatus = async (scope: EmptyObjectType, type: string) => {
 // 導入數據
 const addData = async () => {
 	let data = selectList.value;
-	if (!validTime.value) return ElMessage.warning(t('請填寫生效時間'));
-	if (data.length <= 0) return ElMessage.warning(t('請選擇要導入的專案'));
+	if (!validTime.value) return ElMessage.warning(t('message.hint.pleaseEnterTheEffectiveTime'));
+	if (data.length <= 0) return ElMessage.warning(t('message.hint.selectTheProjectYouWantToImport'));
 	loadingBtn.value = true;
 	const stationList = data.map((item) => {
 		return {
@@ -576,7 +575,7 @@ const addData = async () => {
 	});
 	const res = await postPublishImportProgramApi({ publishId: data[0].publishId, stationList, validTime: validTime.value });
 	if (res.status) {
-		ElMessage.success(t(`導入成功`));
+		ElMessage.success(t(`message.hint.importSuccessfully`));
 		dialogType.value = 'import';
 		// stationDialogVisible.value = false;
 		// stationDialogRef.value.closeDialog();

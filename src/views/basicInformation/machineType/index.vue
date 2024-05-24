@@ -37,6 +37,7 @@ import {
 	putMachineTypeUpdateMachineTypeApi,
 	deleteMachineTypeDeleteMachineTypeApi,
 	postMachineTypeImportMachineApi,
+	postExportMachineLineStationApi,
 } from '/@/api/basicInformation/machineType';
 import { getUploadFileApi } from '/@/api/global';
 // 引入组件
@@ -58,7 +59,7 @@ const state = reactive<TableDemoState>({
 		data: [],
 		// 表头内容（必传，注意格式）
 		header: [
-			{ key: 'machineno', colWidth: '', title: '機臺編號', type: 'text', isCheck: true },
+			{ key: 'machineno', colWidth: '', title: 'message.pages.machineno', type: 'text', isCheck: true },
 			{ key: 'machinetype', colWidth: '', title: 'message.pages.machineType', type: 'text', isCheck: true },
 		],
 		// 配置项（必传）
@@ -77,8 +78,9 @@ const state = reactive<TableDemoState>({
 			isBulkDeletionBtn: false,
 		},
 		topBtnConfig: [
-			{ type: 'add', name: '新增機臺', defaultColor: 'primary', isSure: true, disabled: true },
-			{ type: 'import', name: '批量導入', defaultColor: 'success', isSure: true, disabled: true },
+			{ type: 'add', name: 'message.pages.newMachine', defaultColor: 'primary', isSure: true, disabled: true },
+			{ type: 'import', name: 'message.pages.bulkImport', defaultColor: 'success', isSure: true, disabled: true },
+			{ type: 'exports', name: '下載', defaultColor: 'warning', isSure: true, disabled: true },
 		],
 		btnConfig: [
 			{ type: 'edit', name: 'message.allButton.editBtn', isSure: false, icon: 'ele-Edit', defaultColor: 'warning' },
@@ -87,7 +89,7 @@ const state = reactive<TableDemoState>({
 		// 搜索表单，动态生成（传空数组时，将不显示搜索，注意格式）
 		search: [
 			{
-				label: '機臺編號',
+				label: 'message.pages.machineno',
 				prop: 'machineNo',
 				required: false,
 				type: 'input',
@@ -108,7 +110,7 @@ const state = reactive<TableDemoState>({
 		// 弹窗表单
 		dialogConfig: [
 			{
-				label: '機臺編號',
+				label: 'message.pages.machineno',
 				prop: 'machineno',
 				placeholder: '',
 				required: true,
@@ -139,8 +141,30 @@ const state = reactive<TableDemoState>({
 	},
 });
 // 打開批量導入彈窗
-const onOpentopBtnOther = () => {
-	importDialogRef.value.openDialog('imp', {}, '導入');
+const onOpentopBtnOther = async (_: any, type: string) => {
+	if (type === 'exports') {
+		const form = state.tableData.form;
+		let data: EmptyObjectType = {
+			...form,
+		};
+		if (state.tableData.data.length <= 0) return ElMessage.warning(t('沒有可以導出的機台'));
+		const res = await postExportMachineLineStationApi(data);
+		const result: any = res.data;
+		let blob = new Blob([result], {
+			// 这里一定要和后端对应，不然可能出现乱码或者打不开文件
+			type: 'application/vnd.ms-excel',
+		});
+		const link = document.createElement('a');
+		link.href = window.URL.createObjectURL(blob);
+		const temp = res.headers['content-disposition'].split(';')[1].split('filename=')[1].replace(new RegExp('"', 'g'), '');
+		link.download = decodeURIComponent(temp);
+		// link.download = `${t('文件')} ${new Date().toLocaleString()}.xlsx`; // 在前端也可以设置文件名字
+		link.click();
+		//释放内存
+		window.URL.revokeObjectURL(link.href);
+	} else {
+		importDialogRef.value.openDialog('imp', {}, 'message.tooltip.import');
+	}
 };
 // 下載模板
 const downloadTemp = () => {

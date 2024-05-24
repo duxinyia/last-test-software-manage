@@ -103,16 +103,23 @@
 							>
 								<el-input v-model="state.formData[item.prop]" :placeholder="$t(item.placeholder)" :readonly="true" :suffix-icon="FolderOpened">
 									<template #append v-if="state.formData[item.prop]">
-										<text class="look-file" @click.stop="lookUpload(item.prop)">查看文件</text>
+										<text class="look-file" @click.stop="lookUpload(item.prop)">{{ $t('message.pages.viewFile') }}</text>
 									</template>
 									>
 								</el-input>
 							</el-upload>
 							<!-- 上传进度条弹窗 -->
-							<el-dialog v-model="showProgress" title="上传进度" width="30%" :close-on-click-modal="false" :modal="false" :show-close="false">
+							<el-dialog
+								v-model="showProgress"
+								:title="t('message.pages.uploadProgress')"
+								width="30%"
+								:close-on-click-modal="false"
+								:modal="false"
+								:show-close="false"
+							>
 								<div class="">
 									<!-- 上传的文件名字 -->
-									<div>{{ state.formData[item.prop] }}</div>
+									<!-- <div>{{ state.formData[item.prop] }}</div> -->
 									<div class="">
 										<!-- 进度条百分比 -->
 										<el-progress :percentage="uploadPercentage" :format="format" max="100"></el-progress>
@@ -191,7 +198,7 @@
 								v-if="item.type === 'button'"
 								@click="dailogFormButton"
 								:color="item.color"
-								>{{ item.label }}</el-button
+								>{{ $t(item.label) }}</el-button
 							>
 						</span>
 					</el-col>
@@ -199,9 +206,11 @@
 			</el-form>
 			<slot name="dialogTable" :datas="state"></slot>
 			<el-form v-if="state.dialog.type === 'imp'" class="drawer-multiColumn-form" label-width="100px">
-				<el-button size="default" class="buttonBorder mb10" @click="ondownloadTemp" type="primary" plain>{{ $t('下載模板') }}</el-button>
+				<el-button size="default" class="buttonBorder mb10" @click="ondownloadTemp" type="primary" plain>{{
+					$t('message.pages.downloadTemplate')
+				}}</el-button>
 				<div class="download-form">
-					<el-input :readonly="true" v-model="fileListName" placeholder="請點擊瀏覽文件按鈕" />
+					<el-input :readonly="true" v-model="fileListName" :placeholder="t('message.pages.pleaseClickTheBrowseFileButton')" />
 					<el-upload
 						v-model:file-list="fileList"
 						:auto-upload="false"
@@ -215,7 +224,7 @@
 						:on-exceed="handleExceed"
 						:on-change="handleChange"
 					>
-						<el-button type="primary" size="default" class="ml10 buttonBorder bottonDownload" plain>瀏覽文件</el-button>
+						<el-button type="primary" size="default" class="ml10 buttonBorder bottonDownload" plain>{{ $t('message.pages.browseFile') }}</el-button>
 					</el-upload>
 					<el-button
 						:disabled="fileListName ? false : true"
@@ -224,7 +233,7 @@
 						type="primary"
 						plain
 						@click="submitUpload"
-						>{{ $t('開始上傳') }}</el-button
+						>{{ $t('message.pages.startUploading') }}</el-button
 					>
 				</div>
 			</el-form>
@@ -523,7 +532,7 @@ const openDialog = (type: string, row?: any, title?: string, submitTxt?: string)
 		});
 	} else if (type === 'imp') {
 		fileListName.value = '';
-		state.dialog.title = '上傳文件';
+		state.dialog.title = t('message.pages.uploadFile');
 		state.dialog.submitTxt = '開始上傳';
 	} else {
 		state.dialog.title = t(title!);

@@ -71,7 +71,7 @@ export function getPublishGetSignFlowApi(runId: string) {
 		params: {runId},
 	});
 }
-// 導出
+// 導出對內
 export function postExportPublishStationApi(data:EmptyObjectType) {
   return request({
     url: '/api/ExportExcel/ExportPublishStation',
@@ -79,4 +79,21 @@ export function postExportPublishStationApi(data:EmptyObjectType) {
     responseType: 'blob', // 设置响应数据类型为 blob
     data,
   });
+}
+// 導出對外
+export function postExportPublishStationV2Api(data:EmptyObjectType) {
+  return request({
+    url: '/api/ExportExcel/ExportPublishStationV2',
+    method: 'POST',
+    responseType: 'blob', // 设置响应数据类型为 blob
+    data,
+  });
+}
+// 批量刪除
+export function postPublishBatchDeleteProgramsApi(runIdList: EmptyArrayType) {
+	return request({
+		url: '/api/Publish/BatchDeletePrograms',
+		method: 'POST',
+		data: {runIdList},
+	});
 }

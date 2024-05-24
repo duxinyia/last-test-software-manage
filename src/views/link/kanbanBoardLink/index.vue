@@ -48,7 +48,7 @@
 						</div>
 					</el-col>
 				</el-row>
-				<el-empty v-else style="height: 98%" :image-size="250" description="暫無數據" />
+				<el-empty v-else style="height: 98%" :image-size="250" :description="t('message.hint.nodata')" />
 			</div>
 		</dv-border-box-10>
 	</div>
@@ -70,14 +70,14 @@ let search = ref([
 		prop: 'projectId',
 		required: false,
 		type: 'select',
-		placeholder: '請輸入選擇專案名稱',
+		placeholder: 'message.pages.pleaseEnteraSelectProjectName',
 		options: [],
 		loading: false,
 		filterable: true,
 		remote: true,
 		remoteShowSuffix: true,
 	},
-	{ label: '線體', placeholder: '', prop: 'lineCode', required: false, type: 'select', options: [] },
+	{ label: 'message.pages.line', placeholder: '', prop: 'lineCode', required: false, type: 'select', options: [] },
 ]);
 const form = ref({});
 const loading = ref(false);
@@ -193,7 +193,7 @@ onMounted(() => {
 }
 .board-content div {
 	word-break: break-all;
-	margin-top: 15px;
+	margin-top: 13px;
 }
 .text-label {
 	text-align: right;

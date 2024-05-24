@@ -67,7 +67,7 @@ const state = reactive<TableDemoState>({
 		header: [
 			// { key: 'line', colWidth: '', title: '線體', type: 'text', isCheck: true },
 			{ key: 'stationName', colWidth: '', title: 'message.pages.stationName', type: 'text', isCheck: true },
-			{ key: 'stationCode', colWidth: '', title: '站位代碼', type: 'text', isCheck: true, isRequired: false },
+			{ key: 'stationCode', colWidth: '', title: 'message.pages.stationCode', type: 'text', isCheck: true, isRequired: false },
 			{ key: 'machineType', colWidth: '', title: 'message.pages.machineType', type: 'text', isCheck: true },
 		],
 		// 配置项（必传）
@@ -153,7 +153,7 @@ const state = reactive<TableDemoState>({
 			},
 			{
 				type: 'text',
-				label: '更新描述',
+				label: 'message.pages.updateDescription',
 				placeholder: '',
 				prop: 'describe',
 				required: false,

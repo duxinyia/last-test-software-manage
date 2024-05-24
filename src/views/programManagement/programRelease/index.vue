@@ -21,7 +21,7 @@
 				@sortHeader="onSortHeader"
 				@openAdd="openDialog"
 				@onOpenOtherDialog="onOtherBtn"
-				@importTable="onExportTableData"
+				@onOpentopBtnOther="batchDeletePrograms"
 			>
 				<template #slotCol="{ row }">
 					<el-popover placement="bottom-start" width="20%" trigger="hover">
@@ -35,6 +35,17 @@
 							<span style="text-align: center; width: 100%; cursor: pointer; color: #0047c5"> {{ row.projectName }} </span>
 						</template>
 					</el-popover>
+				</template>
+				<template #toolIcon>
+					<el-dropdown class="tool-icon" :show-timeout="70" :hide-timeout="50" trigger="click" @command="onExportTableDataChange">
+						<el-icon name="iconfont icon-btn-daochu" :size="22" :title="$t('message.tooltip.download')"><ele-Download /></el-icon>
+						<template #dropdown>
+							<el-dropdown-menu>
+								<el-dropdown-item command="inside">對內下載</el-dropdown-item>
+								<el-dropdown-item command="outside">對外下載</el-dropdown-item>
+							</el-dropdown-menu>
+						</template>
+					</el-dropdown>
 				</template>
 			</Table>
 			<!-- 新增编辑弹窗 -->
@@ -71,8 +82,8 @@
 					<div v-if="items.prop === 'stationName'" style="display: flex; justify-content: space-between">
 						<!-- <span style="">{{ t('線體') }}：{{ row.value3 }}</span> -->
 						<span style="">{{ t('message.pages.position') }}：{{ row.value2 }}</span>
-						<span style="color: var(--el-text-color-secondary); font-size: 13px">{{ t('站位代碼') }}：{{ row.label }}</span>
-						<span style="color: var(--el-text-color-secondary); font-size: 13px">{{ t('機臺型號') }}：{{ row.value4 }}</span>
+						<span style="color: var(--el-text-color-secondary); font-size: 13px">{{ t('message.pages.stationCode') }}：{{ row.label }}</span>
+						<span style="color: var(--el-text-color-secondary); font-size: 13px">{{ t('message.pages.machineType') }}：{{ row.value4 }}</span>
 					</div>
 
 					<span v-if="items.prop === 'projectId'" style="float: left">{{ t('message.pages.projectName') }}：{{ row.text }}</span>
@@ -81,7 +92,9 @@
 					>
 				</template>
 				<template #dialogBtn="{ data }">
-					<el-button v-if="btnType === 'edit'" :loading="loadingDelBtn" type="danger" @click="onTableDelRow(data)" size="default">刪 除</el-button>
+					<el-button v-if="btnType === 'edit'" :loading="loadingDelBtn" type="danger" @click="onTableDelRow(data)" size="default">{{
+						$t('message.allButton.deleteBtn')
+					}}</el-button>
 				</template>
 			</Dialog>
 			<!-- 詳情彈窗 -->
@@ -96,13 +109,19 @@
 import { defineAsyncComponent, reactive, ref, onMounted, computed, watch, nextTick } from 'vue';
 import { ElMessage, ElMessageBox, FormInstance } from 'element-plus';
 import { useI18n } from 'vue-i18n';
+import { storeToRefs } from 'pinia';
+import { useUserInfo } from '/@/stores/userInfo';
+const stores = useUserInfo();
+const { userInfos } = storeToRefs(stores);
 import {
 	deletePublishDeletePublishApi,
 	getProjectQueryNoPageApi,
 	getProjectQueryNopageProjectStationApi,
 	getPublishGetSignFlowApi,
 	postExportPublishStationApi,
+	postExportPublishStationV2Api,
 	postPublishAddPublishApi,
+	postPublishBatchDeleteProgramsApi,
 	postPublishQueryPageApi,
 	postPublishSubmitSignApi,
 	putPublishUpdatePublishApi,
@@ -132,8 +151,8 @@ const state = reactive<TableDemoState>({
 		// 表头内容（必传，注意格式）
 		header: [
 			{ key: 'projectName', colWidth: '', title: 'message.pages.projectName', type: 'text', isCheck: true },
-			{ key: 'productionLineType', colWidth: '', title: '產線類型', type: 'text', isCheck: true },
-			{ key: 'stage', colWidth: '', title: '階段', type: 'text', isCheck: true },
+			{ key: 'productionLineType', colWidth: '', title: 'message.pages.productionlinetype', type: 'text', isCheck: true },
+			{ key: 'stage', colWidth: '', title: 'message.pages.stage', type: 'text', isCheck: true },
 			{ key: 'programAttName', colWidth: '', title: 'message.pages.packageName', type: 'text', isCheck: true },
 			{ key: 'version', colWidth: '', title: 'message.pages.programVersion', type: 'text', isCheck: true },
 			{ key: 'createTime', colWidth: '', title: 'message.pages.releaseTime', type: 'text', isCheck: true },
@@ -151,7 +170,7 @@ const state = reactive<TableDemoState>({
 			},
 			{ key: 'fileSize', colWidth: '', title: 'message.pages.packageSize', type: 'text', isCheck: true },
 			{ key: 'checksum', colWidth: '', title: 'CheckSum', type: 'text', isCheck: false },
-			{ key: 'describe', colWidth: '', title: '更新描述', type: 'text', isCheck: false },
+			{ key: 'describe', colWidth: '', title: 'message.pages.updateDescription', type: 'text', isCheck: false },
 			// {
 			// 	key: 'signStatus',
 			// 	colWidth: '',
@@ -165,7 +184,7 @@ const state = reactive<TableDemoState>({
 			// 		4: '已駁回',
 			// 	},
 			// },
-			{ key: 'curResName', colWidth: '160', title: '當前責任人', type: 'text', isCheck: true },
+			{ key: 'curResName', colWidth: '160', title: 'message.pages.currentResponsiblePerson', type: 'text', isCheck: true },
 			// { key: 'runStatusText', colWidth: '', title: '發佈狀態', type: 'text', isCheck: true },
 		],
 		// 配置项（必传）
@@ -174,7 +193,7 @@ const state = reactive<TableDemoState>({
 			loading: true, // loading 加载
 			isBorder: false, // 是否显示表格边框
 			isSerialNo: true, // 是否显示表格序号
-			isSelection: false, // 是否显示表格多选
+			isSelection: true, // 是否显示表格多选
 			isOperate: true, // 是否显示表格操作栏
 			isButton: true, //是否显示表格上面的新增删除按钮
 			isInlineEditing: false, //是否是行内编辑
@@ -182,14 +201,17 @@ const state = reactive<TableDemoState>({
 			isPage: true, //是否有分页
 			operateWidth: 200,
 			isBulkDeletionBtn: false,
-			exportIcon: true, //是否有导出icon(导出功能)
+			exportIcon: false, //是否有导出icon(导出功能)
 		},
-		topBtnConfig: [{ type: 'add', name: 'message.pages.publisher', defaultColor: 'primary', isSure: true, disabled: true }],
+		topBtnConfig: [
+			{ type: 'add', name: 'message.pages.publisher', defaultColor: 'primary', isSure: true, disabled: true },
+			{ type: 'batchDel', name: 'message.pages.batchDeletePackages', defaultColor: 'danger', isSure: true, isNoSelcetDisabled: true },
+		],
 		btnConfig: [
-			{ type: 'edit', name: '编辑', isSure: false, color: '#438df5', icon: 'ele-Edit' },
-			{ type: 'signProgress', name: '已簽核', isSure: false, color: '#00aa59', icon: '' },
-			{ type: 'signing', name: '簽核中', isSure: false, color: '#e6a23c', icon: '' },
-			{ type: 'rejected', name: '已駁回', isSure: false, color: '#ff0000', icon: '' },
+			{ type: 'edit', name: 'message.allButton.edit', isSure: false, color: '#438df5', icon: 'ele-Edit' },
+			{ type: 'signProgress', name: 'message.pages.approved', isSure: false, color: '#00aa59', icon: '' },
+			{ type: 'signing', name: 'message.pages.signing', isSure: false, color: '#e6a23c', icon: '' },
+			{ type: 'rejected', name: 'message.pages.rejected', isSure: false, color: '#ff0000', icon: '' },
 			{ type: 'send', name: 'message.pages.send', isSure: false, defaultColor: 'success', icon: 'ele-TopRight' },
 			{ type: 'detail', name: 'message.pages.detail', isSure: false, defaultColor: 'primary', icon: 'ele-View' },
 
@@ -202,7 +224,7 @@ const state = reactive<TableDemoState>({
 				prop: 'projectId',
 				required: false,
 				type: 'select',
-				placeholder: '請輸入選擇專案名稱',
+				placeholder: 'message.pages.pleaseEnteraSelectProjectName',
 				options: [],
 				loading: false,
 				filterable: true,
@@ -242,7 +264,7 @@ const state = reactive<TableDemoState>({
 			{
 				label: 'message.pages.projectName',
 				prop: 'projectId',
-				placeholder: '請輸入選擇專案名稱',
+				placeholder: 'message.pages.pleaseEnteraSelectProjectName',
 				required: true,
 				type: 'select',
 				standbyType: 'select',
@@ -299,14 +321,14 @@ const state = reactive<TableDemoState>({
 			{
 				label: 'message.pages.stage',
 				prop: 'stage',
-				placeholder: '',
+				placeholder: 'message.pages.stageSplaceholder',
 				required: true,
 				type: 'input',
 				standbyType: 'input',
 				isCheck: true,
 			},
 			{
-				label: '發佈站位',
+				label: 'message.pages.releaseStation',
 				prop: 'stationName',
 				placeholder: '',
 				required: true,
@@ -454,8 +476,30 @@ const satusState = reactive<TableDemoState>({
 		},
 	},
 });
+// 批量刪除
+const batchDeletePrograms = (selectlist: EmptyArrayType) => {
+	ElMessageBox.confirm(t('message.hint.sureBatchDel'), t('message.hint.tips'), {
+		confirmButtonText: t('message.allButton.ok'),
+		cancelButtonText: t('message.allButton.cancel'),
+		type: 'warning',
+		draggable: true,
+		closeOnClickModal: false,
+	})
+		.then(async () => {
+			let runIdList: EmptyArrayType = [];
+			selectlist.forEach((item) => {
+				runIdList.push(item.publishId);
+			});
+			const res = await postPublishBatchDeleteProgramsApi(runIdList);
+			if (res.status) {
+				ElMessage.warning(t('message.hint.batchDelPackageSuccess'));
+				getTableData();
+			}
+		})
+		.catch(() => {});
+};
 // 導出
-const onExportTableData = async (row: EmptyObjectType, hearder: EmptyObjectType) => {
+const onExportTableDataChange = async (type: string) => {
 	const form = state.tableData.form;
 	let data: EmptyObjectType = {
 		...form,
@@ -463,21 +507,49 @@ const onExportTableData = async (row: EmptyObjectType, hearder: EmptyObjectType)
 		endTime: form.publishDate && form.publishDate[1],
 	};
 	delete data.publishDate;
-	if (Object.keys(data).length <= 2 || state.tableData.data.length <= 0) return ElMessage.warning(t('沒有可以導出的專案'));
-	const res = await postExportPublishStationApi(data);
-	const result: any = res.data;
-	let blob = new Blob([result], {
-		// 这里一定要和后端对应，不然可能出现乱码或者打不开文件
-		type: 'application/vnd.ms-excel',
-	});
-	const link = document.createElement('a');
-	link.href = window.URL.createObjectURL(blob);
-	const temp = res.headers['content-disposition'].split(';')[1].split('filename=')[1].replace(new RegExp('"', 'g'), '');
-	link.download = decodeURIComponent(temp);
-	// link.download = `${t('料號')} ${new Date().toLocaleString()}.xlsx`; // 在前端也可以设置文件名字
-	link.click();
-	//释放内存
-	window.URL.revokeObjectURL(link.href);
+	if (Object.keys(data).length <= 2 || state.tableData.data.length <= 0) return ElMessage.warning(t('message.hint.noProjectsExport'));
+	// inside對內下載，outside：對外下載
+	const res = type === 'inside' ? await postExportPublishStationApi(data) : await postExportPublishStationV2Api(data);
+	// console.log(res);
+	if (res.data) {
+		const result: any = res.data;
+		let blob = new Blob([result], {
+			// 这里一定要和后端对应，不然可能出现乱码或者打不开文件
+			type: 'application/vnd.ms-excel',
+		});
+		const link = document.createElement('a');
+		link.href = window.URL.createObjectURL(blob);
+		const temp = res.headers['content-disposition'].split(';')[1].split('filename=')[1].replace(new RegExp('"', 'g'), '');
+		link.download = decodeURIComponent(temp);
+		// link.download = `${t('料號')} ${new Date().toLocaleString()}.xlsx`; // 在前端也可以设置文件名字
+		link.click();
+		//释放内存
+		window.URL.revokeObjectURL(link.href);
+	}
+	// const result: any = res.data;
+	// const reader: any = new FileReader();
+	// reader.readAsText(result);
+	// reader.onload = function () {
+	// try {
+	// 	const resData = JSON.parse(reader.result); // 解析对象成功，说明是json数据
+	// 	if (resData.code != 200) {
+	// 		ElMessage.error(resData.message);
+	// 	}
+	// } catch (err) {
+	// 	let blob = new Blob([result], {
+	// 		// 这里一定要和后端对应，不然可能出现乱码或者打不开文件
+	// 		type: 'application/vnd.ms-excel',
+	// 	});
+	// 	const link = document.createElement('a');
+	// 	link.href = window.URL.createObjectURL(blob);
+	// 	const temp = res.headers['content-disposition'].split(';')[1].split('filename=')[1].replace(new RegExp('"', 'g'), '');
+	// 	link.download = decodeURIComponent(temp);
+	// 	// link.download = `${t('料號')} ${new Date().toLocaleString()}.xlsx`; // 在前端也可以设置文件名字
+	// 	link.click();
+	// 	//释放内存
+	// 	window.URL.revokeObjectURL(link.href);
+	// }
+	// };
 };
 // 點擊詳情或者送簽按鈕或者已簽核和簽核中按鈕
 const onOtherBtn = async (scope: EmptyObjectType, type: string) => {
@@ -550,32 +622,37 @@ const getTableData = async () => {
 		// item.programType = programTypeMap[item.programType];
 		// item.sendIsShow = item.delDisabled = item.signStatus === 0 ? false : true;
 		// item.delIsShow = item.signStatus === 0 ? false : true;
-		if (item.signStatus === 1) {
-			// 簽核中
-			item.signingIsShow = false;
-			item.editIsShow = item.rejectedIsShow = item.sendIsShow = item.signProgressIsShow = true;
-			item.btnNumber = 2;
-		} else if (item.signStatus === 2) {
-			// 已簽核
-			item.editIsShow = item.rejectedIsShow = item.sendIsShow = item.signingIsShow = true;
-			item.signProgressIsShow = false;
-			item.btnNumber = 2;
-		} else if (item.signStatus === 0) {
-			// 未簽核
-			item.rejectedIsShow = item.signProgressIsShow = item.signingIsShow = true;
-			item.editIsShow = item.sendIsShow = false;
-			item.btnNumber = 3;
-		} else if (item.signStatus === 4) {
-			item.editIsShow = item.sendIsShow = item.signProgressIsShow = item.signingIsShow = true;
-			item.rejectedIsShow = false;
-			item.btnNumber = 2;
+		if (!userInfos.value.isSign) {
+			item.rejectedIsShow = item.signingIsShow = item.sendIsShow = item.signProgressIsShow = true;
+			item.editIsShow = item.signStatus === 0 ? false : true;
+		} else {
+			if (item.signStatus === 1) {
+				// 簽核中
+				item.signingIsShow = false;
+				item.editIsShow = item.rejectedIsShow = item.sendIsShow = item.signProgressIsShow = true;
+				item.btnNumber = 2;
+			} else if (item.signStatus === 2) {
+				// 已簽核
+				item.editIsShow = item.rejectedIsShow = item.sendIsShow = item.signingIsShow = true;
+				item.signProgressIsShow = false;
+				item.btnNumber = 2;
+			} else if (item.signStatus === 0) {
+				// 未簽核
+				item.rejectedIsShow = item.signProgressIsShow = item.signingIsShow = true;
+				item.editIsShow = item.sendIsShow = false;
+				item.btnNumber = 3;
+			} else if (item.signStatus === 4) {
+				item.editIsShow = item.sendIsShow = item.signProgressIsShow = item.signingIsShow = true;
+				item.rejectedIsShow = false;
+				item.btnNumber = 2;
+			}
 		}
 	});
 	// 操作欄寬度
 	const width = res.data.data.some((item: any) => {
 		return item.btnNumber === 3;
 	});
-	state.tableData.config.operateWidth = width ? 290 : 200;
+	state.tableData.config.operateWidth = width ? 300 : 220;
 	state.tableData.data = res.data.data;
 	state.tableData.config.total = res.data.total;
 	if (res.status) {
@@ -646,7 +723,7 @@ const openEditDialog = (formData: EmptyObjectType) => {
 	// 展示专案名称
 	formData.projectId = formData.projectName;
 	formData.stationName = formData.stationMachines.map((item: any) => {
-		return item.stationName + '|' + item.stationCode + '|' + item.machineType;
+		return item.stationName + '/' + item.stationCode + '/' + item.machineType;
 	});
 	// 调站位接口
 	getStationSelect(id);
@@ -741,11 +818,12 @@ const addData = async (ruleForm: EmptyObjectType, type: string) => {
 		stationMachines,
 		fileSize,
 		filePath,
+		programAttName,
 	} = ruleForm;
 	// console.log(programFilePathfile[0]);
 
 	stationName = stationName.map((item: any) => {
-		return { stationName: item.split('|')[0], stationCode: item.split('|')[1], machineType: item.split('|')[2] };
+		return { stationName: item.split('/')[0], stationCode: item.split('/')[1], machineType: item.split('/')[2] };
 	});
 	if (type === 'add') {
 		const getData = {
@@ -785,7 +863,7 @@ const addData = async (ruleForm: EmptyObjectType, type: string) => {
 		}
 	} else {
 		if (programFilePathfile) {
-			fileSize = Number((programFilePathfile[0].size / (1024 * 1024)).toFixed(2));
+			fileSize = Number((programFilePathfile[0]?.size / (1024 * 1024)).toFixed(2));
 		}
 		const editData = {
 			publishId,
@@ -794,8 +872,8 @@ const addData = async (ruleForm: EmptyObjectType, type: string) => {
 			fileSize,
 			stationList: stationName || stationMachines,
 			version,
-			programFilePath: programFilePathfileUrl,
 			programFileName: programFilePath,
+			programFilePath: programFilePathfileUrl,
 			lwsFilePath: lwsFilePathfileUrl,
 			checkSum: checksum,
 			describe,
@@ -805,7 +883,7 @@ const addData = async (ruleForm: EmptyObjectType, type: string) => {
 		const res = await putPublishUpdatePublishApi(editData);
 		loadingBtn.value = false;
 		if (res.status) {
-			ElMessage.success(t(`修改成功`));
+			ElMessage.success(t(`message.hint.modifiedSuccess`));
 			stationDialogRef.value.closeDialog();
 			getTableData();
 		}
@@ -813,9 +891,9 @@ const addData = async (ruleForm: EmptyObjectType, type: string) => {
 };
 // 表格删除当前项回调
 const onTableDelRow = async (datas: EmptyObjectType) => {
-	ElMessageBox.confirm(`確定刪除嗎？`, '提示', {
-		confirmButtonText: '確 定',
-		cancelButtonText: '取 消',
+	ElMessageBox.confirm(`${t('message.hint.suredel')}`, t('message.hint.tips'), {
+		confirmButtonText: t('message.allButton.ok'),
+		cancelButtonText: t('message.allButton.cancel'),
 		type: 'warning',
 		draggable: true,
 	})
@@ -851,9 +929,11 @@ const getStationSelect = async (val: string) => {
 	const res = await getProjectQueryNopageProjectStationApi(val);
 	let options = res.data.map((item: any) => {
 		return {
-			value: item.stationname + '|' + item.stationcode + '|' + item.machinetypes,
+			value: item.stationname + '/' + item.stationcode + '/' + item.machinetypes,
 			label: item.stationcode,
-			text: `${t('message.pages.position')}：${item.stationname}，${t('站位代碼')}：${item.stationcode}，${t('機臺型號')}：${item.machinetypes}`,
+			text: `${t('message.pages.position')}：${item.stationname}，${t('message.pages.stationCode')}：${item.stationcode}，${t(
+				'message.pages.machineType'
+			)}：${item.machinetypes}`,
 			value2: item.stationname,
 			value3: item.line,
 			value4: item.machinetypes,
@@ -884,6 +964,7 @@ const getSelect = async () => {
 onMounted(() => {
 	getTableData();
 	getSelect();
+	if (state.tableData.topBtnConfig) state.tableData.topBtnConfig[1].isSure = !userInfos.value.isSign ? false : true;
 });
 </script>
 
@@ -915,5 +996,10 @@ onMounted(() => {
 	font-size: 12px;
 	border-radius: 7px;
 	margin-right: 3px;
+}
+.tool-icon {
+	margin-right: 10px;
+	cursor: pointer;
+	color: var(--el-text-color-regular);
 }
 </style>

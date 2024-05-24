@@ -88,7 +88,7 @@
 					<el-form-item class="table-form-btn" :label-width="search.length < 6 ? '20px' : '100px'">
 						<template #label v-if="search.length >= 6">
 							<div class="table-form-btn-toggle ml10" @click="state.isToggle = !state.isToggle">
-								<span>{{ state.isToggle ? '收篩選' : '展篩選' }}</span>
+								<span>{{ state.isToggle ? $t('message.pages.receivingFilter') : $t('message.pages.expansionScreening') }}</span>
 								<SvgIcon :name="state.isToggle ? 'ele-ArrowUp' : 'ele-ArrowDown'" />
 							</div>
 						</template>

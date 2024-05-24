@@ -40,3 +40,12 @@ export function postMachineTypeImportMachineApi(filePath: string) {
 		params:{filePath}
 	});
 }
+// 導出機台
+export function postExportMachineLineStationApi(params:EmptyObjectType) {
+  return request({
+    url: '/api/ExportExcel/ExportMachineLineStation',
+    method: 'POST',
+    responseType: 'blob', // 设置响应数据类型为 blob
+    params,
+  });
+}

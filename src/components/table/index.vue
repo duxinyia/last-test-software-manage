@@ -24,8 +24,8 @@
 					$t('message.tooltip.export')
 				}}</el-button>
 				<el-button
-					@click="onOpentopBtnOther"
-					v-else
+					@click="onOpentopBtnOther(topbtn.type)"
+					v-else-if="topbtn.isSure"
 					size="default"
 					class="ml10"
 					:color="topbtn.color"
@@ -47,6 +47,7 @@
 				<!-- <el-button @click="onExportTable" v-if="config.exportIcon" size="default" class="" type="primary" plain>{{
 					$t('message.tooltip.export')
 				}}</el-button> -->
+				<slot name="toolIcon"></slot>
 				<el-icon v-if="config.exportIcon" name="iconfont icon-btn-daochu" :size="22" :title="$t('message.tooltip.download')" @click="onExportTable"
 					><ele-Download
 				/></el-icon>
@@ -551,8 +552,8 @@ const onOpenAdd = (type: string) => {
 	emit('openAdd', type);
 };
 // 打开其他弹窗
-const onOpentopBtnOther = () => {
-	emit('onOpentopBtnOther', state.selectlist);
+const onOpentopBtnOther = (type: string) => {
+	emit('onOpentopBtnOther', state.selectlist, type);
 };
 // 打开修改弹窗
 const onOpenEdit = (type: string, row: Object, scope: EmptyArrayType) => {

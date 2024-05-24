@@ -35,7 +35,9 @@
 							@delRow="onDelRow"
 						>
 							<template #topButton v-if="dialogType === 'add'">
-								<el-button size="default" class="ml10" type="success" plain @click="onOpentopBtnOther">{{ $t('批量導入') }}</el-button>
+								<el-button size="default" class="ml10" type="success" plain @click="onOpentopBtnOther">{{
+									$t('message.pages.bulkImport')
+								}}</el-button>
 							</template>
 						</Table>
 					</el-form>
@@ -103,8 +105,8 @@ const state = reactive<TableDemoState>({
 		data: [],
 		// 表头内容（必传，注意格式）
 		header: [
-			{ key: 'line', colWidth: '', title: '線體名稱', type: 'text', isCheck: true },
-			{ key: 'linecode', colWidth: '', title: '線體代碼', type: 'text', isCheck: true },
+			{ key: 'line', colWidth: '', title: 'message.pages.lineName', type: 'text', isCheck: true },
+			{ key: 'linecode', colWidth: '', title: 'message.pages.lineCode', type: 'text', isCheck: true },
 		],
 		// 配置项（必传）
 		config: {
@@ -121,7 +123,7 @@ const state = reactive<TableDemoState>({
 			operateWidth: 200,
 			isBulkDeletionBtn: false,
 		},
-		topBtnConfig: [{ type: 'add', name: '新增線體', defaultColor: 'primary', isSure: true, disabled: true }],
+		topBtnConfig: [{ type: 'add', name: 'message.pages.newLineBody', defaultColor: 'primary', isSure: true, disabled: true }],
 		btnConfig: [
 			// { type: 'bind', name: '綁定站位', isSure: false, icon: '', defaultColor: 'success' },
 			// { type: 'unbind', name: '解綁站位', isSure: false, icon: '', color: '#dc362e' },
@@ -130,9 +132,9 @@ const state = reactive<TableDemoState>({
 		],
 		// 搜索表单，动态生成（传空数组时，将不显示搜索，注意格式）
 		search: [
-			{ label: '線體名稱', prop: 'line', required: false, type: 'input' },
-			{ label: '站位', prop: 'stationCode', required: false, type: 'input' },
-			{ label: '機臺編號', prop: 'machineNo', required: false, type: 'input' },
+			{ label: 'message.pages.lineName', prop: 'line', required: false, type: 'input' },
+			{ label: 'message.pages.position', prop: 'stationCode', required: false, type: 'input' },
+			{ label: 'message.pages.machineno', prop: 'machineNo', required: false, type: 'input' },
 		],
 		searchConfig: {
 			isSearchBtn: true,
@@ -149,7 +151,7 @@ const state = reactive<TableDemoState>({
 		// 弹窗表单
 		dialogConfig: [
 			{
-				label: '線體名稱',
+				label: 'message.pages.lineName',
 				prop: 'line',
 				placeholder: '',
 				required: true,
@@ -231,8 +233,8 @@ const lineDialogState = reactive<TableDemoState>({
 			{
 				key: 'stationCode',
 				colWidth: '',
-				title: '站位',
-				placeholder: '請輸入選擇站位',
+				title: 'message.pages.position',
+				placeholder: 'message.pages.pleaseEnterSelectStation',
 				type: 'select',
 				isCheck: true,
 				isRequired: true,
@@ -244,8 +246,8 @@ const lineDialogState = reactive<TableDemoState>({
 			{
 				key: 'machineNoList',
 				colWidth: '500',
-				title: '機臺編號',
-				placeholder: '請輸入選擇機臺編號',
+				title: 'message.pages.machineno',
+				placeholder: 'message.pages.pleaseEnterTheSelectionMachineNumber',
 				type: 'select',
 				isCheck: true,
 				isRequired: true,
@@ -273,12 +275,12 @@ const lineDialogState = reactive<TableDemoState>({
 			isPage: false, //是否有分页
 			height: 380,
 			isAddRowBtn: true,
-			operateWidth: 90,
+			operateWidth: 100,
 		},
 		topBtnConfig: [],
 		btnConfig: [
 			// { type: 'edit', name: '修改', isSure: false, icon: '', defaultColor: 'success' },
-			{ type: 'del', name: '刪除', isSure: true, icon: '', defaultColor: 'danger' },
+			{ type: 'del', name: 'message.allButton.deleteBtn', isSure: true, icon: '', defaultColor: 'danger' },
 		],
 		// 搜索表单，动态生成（传空数组时，将不显示搜索，注意格式）
 		search: [],
@@ -316,7 +318,7 @@ const submitUpload = async (formEl: EmptyObjectType | undefined) => {
 			importDialogRef.value.closeDialog();
 			let datas = lineDialogState.tableData;
 			datas.data = res1.data;
-			ElMessage.success('導入成功');
+			ElMessage.success(t('message.hint.importSuccessfully'));
 		}
 	}
 };
@@ -400,7 +402,7 @@ const inputBlur = async (formData: EmptyObjectType, item: EmptyObjectType) => {
 	// }
 };
 let currentDilaoglineCode = '';
-// 打開綁定彈窗(又TM不要了)
+// 打開綁定彈窗(又TM不要了，真煩！)
 const openBindDialog = (scope: EmptyObjectType, type: string) => {
 	dialogState.tableData.data = [];
 	dialogState.tableData.config.loading = true;
