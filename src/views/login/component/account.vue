@@ -116,7 +116,8 @@ const onSignIn = (formEl: EmptyObjectType | undefined) => {
 				// 存储 token 到浏览器缓存
 				if (res.status) {
 					Session.set('token', res.data.token);
-					Session.set('isSign', res.data.isSign);
+					Session.set('tenantDatas', res.data.tenantDatas);
+					// Session.set('isSign', res.data.isSign);
 					Cookies.set('userPassword', datapw);
 					Cookies.set('userName', res.data.userName);
 					Cookies.set('userId', res.data.userId);

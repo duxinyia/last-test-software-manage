@@ -356,6 +356,7 @@ const emit = defineEmits([
 	'newInputHandleExceed',
 	'inputBlur',
 	'inputFocus',
+	'uploadApi',
 ]);
 // 定义父组件传过来的值
 const props = defineProps({
@@ -727,7 +728,11 @@ const getFileData = async (uploadFile: EmptyObjectType, prop: any) => {
 						state.formData[v.prop] = uploadFile.name;
 					}
 				});
-				state.formData[prop + 'fileUrl'] = res!.data;
+				state.formData[prop + 'fileUrl'] = prop != 'lwsFilePath' ? res!.data : res!.data.relativePath;
+				// 單獨給lws文件做處理
+				if (prop === 'lwsFilePath') {
+					state.formData.fileHost = res!.data.host;
+				}
 			})
 			.catch(() => {
 				state.formData[prop + 'fileUrl'] = '';
@@ -736,7 +741,7 @@ const getFileData = async (uploadFile: EmptyObjectType, prop: any) => {
 				showProgress.value = false;
 				ElMessage.warning(res!.message);
 			});
-	} else if (res!.code !== 203 && res!.status) {
+	} else if (res!.code != 203 && res!.status) {
 		uploadPercentage.value = 100;
 		ElMessage.success(`上傳成功`);
 		props.dialogConfig.forEach((v) => {
@@ -744,7 +749,10 @@ const getFileData = async (uploadFile: EmptyObjectType, prop: any) => {
 				state.formData[v.prop] = uploadFile.name;
 			}
 		});
-		state.formData[prop + 'fileUrl'] = res!.data;
+		state.formData[prop + 'fileUrl'] = prop != 'lwsFilePath' ? res!.data : res!.data.relativePath;
+		if (prop === 'lwsFilePath') {
+			state.formData.fileHost = res!.data.host;
+		}
 		showProgress.value = false;
 	} else {
 		state.formData[prop + 'fileUrl'] = '';

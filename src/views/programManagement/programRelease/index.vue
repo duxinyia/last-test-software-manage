@@ -124,6 +124,7 @@ import {
 	postPublishBatchDeleteProgramsApi,
 	postPublishQueryPageApi,
 	postPublishSubmitSignApi,
+	postPublishUpdateSignStatusApi,
 	putPublishUpdatePublishApi,
 } from '/@/api/programManagement/programRelease';
 import { getStageQueryNoPageApi } from '/@/api/projectConfiguration/projectManage';
@@ -210,6 +211,7 @@ const state = reactive<TableDemoState>({
 		btnConfig: [
 			{ type: 'edit', name: 'message.allButton.edit', isSure: false, color: '#438df5', icon: 'ele-Edit' },
 			{ type: 'signProgress', name: 'message.pages.approved', isSure: false, color: '#00aa59', icon: '' },
+			{ type: 'save', name: '保存', isSure: false, defaultColor: 'success', icon: '' },
 			{ type: 'signing', name: 'message.pages.signing', isSure: false, color: '#e6a23c', icon: '' },
 			{ type: 'rejected', name: 'message.pages.rejected', isSure: false, color: '#ff0000', icon: '' },
 			{ type: 'send', name: 'message.pages.send', isSure: false, defaultColor: 'success', icon: 'ele-TopRight' },
@@ -554,9 +556,11 @@ const onExportTableDataChange = async (type: string) => {
 // 點擊詳情或者送簽按鈕或者已簽核和簽核中按鈕
 const onOtherBtn = async (scope: EmptyObjectType, type: string) => {
 	if (type === 'detail') {
+		// 詳情
 		checkNoRef.value = scope.row;
 		detaildialogVisible.value = true;
 	} else if (type === 'send') {
+		// 送簽
 		ElMessageBox.confirm(t('message.hint.signature'), t('message.hint.tips'), {
 			confirmButtonText: t('message.allButton.ok'),
 			cancelButtonText: t('message.allButton.cancel'),
@@ -599,8 +603,24 @@ const onOtherBtn = async (scope: EmptyObjectType, type: string) => {
 			satusState.tableData.data = [];
 		}
 		satusState.tableData.config.loading = false;
+	} else if (type === 'save') {
+		// 保存
+		ElMessageBox.confirm(t('確定保存嗎？'), t('message.hint.tips'), {
+			confirmButtonText: t('message.allButton.ok'),
+			cancelButtonText: t('message.allButton.cancel'),
+			type: 'warning',
+			draggable: true,
+			closeOnClickModal: false,
+		}).then(async () => {
+			const res = await postPublishUpdateSignStatusApi(scope.row.publishId);
+			if (res.status) {
+				ElMessage.success(t('保存成功'));
+				getTableData();
+			}
+		});
 	}
 };
+// let tenantDatasGlo = false;
 // 初始化列表数据
 const getTableData = async () => {
 	const form = state.tableData.form;
@@ -617,36 +637,55 @@ const getTableData = async () => {
 	};
 	delete data.publishDate;
 	const res = await postPublishQueryPageApi(data);
+	let tenantDatas = userInfos.value.tenantDatas.some((item: any) => {
+		return item.funccode === 'NEEDSIGN';
+	});
 	res.data.data.forEach((item: any) => {
 		if (item.curResName) item.curResName = `${item.curResponsible} / ${item.curResName}`;
 		// item.programType = programTypeMap[item.programType];
 		// item.sendIsShow = item.delDisabled = item.signStatus === 0 ? false : true;
 		// item.delIsShow = item.signStatus === 0 ? false : true;
-		if (!userInfos.value.isSign) {
-			item.rejectedIsShow = item.signingIsShow = item.sendIsShow = item.signProgressIsShow = true;
-			item.editIsShow = item.signStatus === 0 ? false : true;
-		} else {
-			if (item.signStatus === 1) {
-				// 簽核中
-				item.signingIsShow = false;
-				item.editIsShow = item.rejectedIsShow = item.sendIsShow = item.signProgressIsShow = true;
-				item.btnNumber = 2;
-			} else if (item.signStatus === 2) {
-				// 已簽核
-				item.editIsShow = item.rejectedIsShow = item.sendIsShow = item.signingIsShow = true;
-				item.signProgressIsShow = false;
-				item.btnNumber = 2;
-			} else if (item.signStatus === 0) {
-				// 未簽核
-				item.rejectedIsShow = item.signProgressIsShow = item.signingIsShow = true;
-				item.editIsShow = item.sendIsShow = false;
-				item.btnNumber = 3;
-			} else if (item.signStatus === 4) {
-				item.editIsShow = item.sendIsShow = item.signProgressIsShow = item.signingIsShow = true;
-				item.rejectedIsShow = false;
-				item.btnNumber = 2;
-			}
+		console.log(tenantDatas);
+
+		// if (!tenantDatas) {
+		// 	item.rejectedIsShow = item.signingIsShow = item.sendIsShow = item.signProgressIsShow = true;
+		// 	item.editIsShow = item.signStatus === 0 ? false : true;
+		// 	item.saveIsShow = item.signStatus === 0 ? false : true;
+		// 	item.btnNumber = 3;
+		// } else {
+		if (item.signStatus === 1) {
+			// 簽核中
+			// true為不顯示，false為顯示
+			item.signingIsShow = false;
+			item.editIsShow = item.rejectedIsShow = item.sendIsShow = item.signProgressIsShow = true;
+			item.saveIsShow = true;
+			item.btnNumber = 2;
+		} else if (item.signStatus === 2) {
+			// 已簽核
+			item.editIsShow = item.rejectedIsShow = item.sendIsShow = item.signingIsShow = true;
+			item.signProgressIsShow = false;
+			item.saveIsShow = true;
+			item.btnNumber = 2;
+		} else if (item.signStatus === 0 && tenantDatas) {
+			// 未簽核並且有NEEDSIGN
+			// 不顯示
+			item.rejectedIsShow = item.signProgressIsShow = item.signingIsShow = item.saveIsShow = true;
+			item.editIsShow = item.sendIsShow = false;
+			item.btnNumber = 3;
+		} else if (item.signStatus === 0 && !tenantDatas) {
+			// 未簽核並且沒有NEEDSIGN
+			// 不顯示
+			item.rejectedIsShow = item.signProgressIsShow = item.signingIsShow = item.sendIsShow = true;
+			// 顯示
+			item.saveIsShow = item.editIsShow = false;
+			item.btnNumber = 3;
+		} else if (item.signStatus === 4) {
+			item.editIsShow = item.sendIsShow = item.signProgressIsShow = item.signingIsShow = true;
+			item.saveIsShow = true;
+			item.rejectedIsShow = false;
+			item.btnNumber = 2;
 		}
+		// }
 	});
 	// 操作欄寬度
 	const width = res.data.data.some((item: any) => {
@@ -795,8 +834,11 @@ const onSelectChange = async (val: string, prop: string, data: EmptyObjectType) 
 		getStationSelect(val);
 	}
 };
+
 // 發佈數據
 const addData = async (ruleForm: EmptyObjectType, type: string) => {
+	console.log(ruleForm);
+
 	let {
 		projectId,
 		productionLineType,
@@ -819,6 +861,7 @@ const addData = async (ruleForm: EmptyObjectType, type: string) => {
 		fileSize,
 		filePath,
 		programAttName,
+		fileHost,
 	} = ruleForm;
 	// console.log(programFilePathfile[0]);
 
@@ -843,6 +886,7 @@ const addData = async (ruleForm: EmptyObjectType, type: string) => {
 			programFileName: programFilePath,
 			lwsFilePath: lwsFilePathfileUrl,
 			fileSize: Number((programFilePathfile[0].size / (1024 * 1024)).toFixed(2)),
+			fileHost,
 		};
 		loadingBtn.value = true;
 		// console.log(getData);
@@ -862,7 +906,7 @@ const addData = async (ruleForm: EmptyObjectType, type: string) => {
 			getTableData();
 		}
 	} else {
-		if (programFilePathfile) {
+		if (programFilePathfile.length > 0) {
 			fileSize = Number((programFilePathfile[0]?.size / (1024 * 1024)).toFixed(2));
 		}
 		const editData = {
@@ -877,6 +921,7 @@ const addData = async (ruleForm: EmptyObjectType, type: string) => {
 			lwsFilePath: lwsFilePathfileUrl,
 			checkSum: checksum,
 			describe,
+			fileHost,
 		};
 		// console.log(editData);
 		loadingBtn.value = true;
@@ -964,7 +1009,7 @@ const getSelect = async () => {
 onMounted(() => {
 	getTableData();
 	getSelect();
-	if (state.tableData.topBtnConfig) state.tableData.topBtnConfig[1].isSure = !userInfos.value.isSign ? false : true;
+	// if (state.tableData.topBtnConfig) state.tableData.topBtnConfig[1].isSure = tenantDatasGlo ? false : true;
 });
 </script>
 

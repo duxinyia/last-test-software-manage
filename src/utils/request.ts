@@ -34,7 +34,7 @@ service.interceptors.request.use(
 		return Promise.reject(error);
 	}
 );
-
+// 页面掉接口的时候跑在了响应拦截器之前了
 const readFileAsPromise= (response:any)=> {
 	return new Promise((resolve, reject) => {
 		const result: any = response.data;

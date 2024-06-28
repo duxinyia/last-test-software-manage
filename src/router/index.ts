@@ -113,7 +113,7 @@ router.beforeEach(async (to, from, next) => {
 			Local.clear()
 			NProgress.done();
 		} else if (token &&( to.path === '/login'||to.path === '/')) {
-			next('/projectConfiguration/projectManage');	
+			next('/basicInformation/machineType');	
 			NProgress.done();
 		} 
 		else {

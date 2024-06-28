@@ -97,3 +97,11 @@ export function postPublishBatchDeleteProgramsApi(runIdList: EmptyArrayType) {
 		data: {runIdList},
 	});
 }
+// 保存
+export function postPublishUpdateSignStatusApi(publishId: string) {
+	return request({
+		url: '/api/Publish/UpdateSignStatus',
+		method: 'POST',
+		params: {publishId},
+	});
+}

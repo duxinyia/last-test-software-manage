@@ -72,7 +72,7 @@ const handleChange: UploadProps['onChange'] = (uploadFile, uploadFiles) => {
 const submitUpload = async (formEl: EmptyObjectType | undefined) => {
 	const res = await getUploadFileApi(0, formEl!.raw);
 	if (res.status) {
-		const res1 = await postImportVersionFromExcelApi(res.data);
+		const res1 = await postImportVersionFromExcelApi(res.data.relativePath);
 		if (res1.status) {
 			ElMessage.success(res1.message);
 		}
