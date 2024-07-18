@@ -8,6 +8,7 @@ export default {
 		machineType:'机台型号',
 		machine:'机台',
 		stage:'阶段',
+		area:'区域',
 		projectConfiguration:'专案配置',
 		projectManagement:'专案管理',
 		programManagement:'程式管理',

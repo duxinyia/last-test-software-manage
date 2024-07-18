@@ -150,6 +150,10 @@ export default {
 		viewFile:'view file',
 		uploadProgress:'upload progress',
 		stageSplaceholder:'multiple stages are separated by ","',
+		building:'building',
+		floor:'floor',
+		addFloor:'add floor',
+		addBuilding:'add building',
 	},
 	hint:{
 		addSuccess:'add success!',
@@ -173,5 +177,8 @@ export default {
 		sureBatchDel:'Are you sure about batch deletion?',
 		batchDelPackageSuccess:'Batch package removal successful!',
 		noProjectsExport:'There are no projects to export',
+		page:'Page',
+		openedInAnewWindow:'opened in a new window',
+		goExperienceNow:'Go experience now'
 	}
 };

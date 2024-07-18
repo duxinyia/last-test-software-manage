@@ -150,6 +150,10 @@ export default {
 		viewFile:'查看文件',
 		uploadProgress:'上传进度',
 		stageSplaceholder:'多个阶段使用","分隔',
+		building:'楼栋',
+		floor:'楼层',
+		addFloor:'新增楼层',
+		addBuilding:'新增楼栋',
 	},
 	hint:{
 		addSuccess:'新增成功!',
@@ -173,5 +177,8 @@ export default {
 		sureBatchDel:'确定批量删除吗？',
 		batchDelPackageSuccess:'批量删除程式包成功！',
 		noProjectsExport:'没有可以导出的专案',
+		page:'页面',
+		openedInAnewWindow:'已在新窗口中打开',
+		goExperienceNow:'立即前往体验'
 	}
 };

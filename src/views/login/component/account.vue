@@ -161,6 +161,9 @@ const onSignIn = (formEl: EmptyObjectType | undefined) => {
 const addIsKeepAlive = (datas: EmptyArrayType) => {
 	datas.forEach((item) => {
 		item.meta['isKeepAlive'] = true;
+		if (item.name === 'KanbanBoard') {
+			item.meta.isLink = 'http://10.147.214.130:8093/#/look9';
+		}
 		item.children &&
 			item.children.forEach((c: any) => {
 				let reg = new RegExp('/', 'g');

@@ -8,6 +8,7 @@ export default {
 		machineType:'機臺型號',
 		machine:'機臺',
 		stage:'階段',
+		area:'區域',
 		projectConfiguration:'專案配置',
 		projectManagement:'專案管理',
 		programManagement:'程式管理',

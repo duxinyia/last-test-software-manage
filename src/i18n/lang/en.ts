@@ -8,6 +8,7 @@ export default {
 		machineType:'machine type',
 		machine:'machine',
 		stage:'stage',
+		area:'area',
 		projectConfiguration:'project configuration',
 		projectManagement:'project manage',
 		programManagement:'program manage',

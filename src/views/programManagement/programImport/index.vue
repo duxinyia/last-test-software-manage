@@ -221,7 +221,7 @@ const state = reactive<TableDemoState>({
 			isPage: true, //是否有分页
 			operateWidth: 150,
 			isBulkDeletionBtn: false,
-			height: 570,
+			height: 550,
 		},
 		topBtnConfig: [{ type: 'add', name: 'message.pages.programImport', defaultColor: 'primary', isSure: true, disabled: true }],
 		btnConfig: [
@@ -396,7 +396,7 @@ const cellStyle = ({ row, column }: EmptyObjectType) => {
 		return { color: 'var(--el-color-primary)', cursor: 'pointer' };
 	} else if (property === 'importStatus') {
 		// 導入狀態
-		let colorMap: EmptyObjectType = { 0: 'var(--el-color-danger)', 1: 'var(--el-color-success)', 2: 'var(--el-color-primary)' };
+		let colorMap: EmptyObjectType = { 0: 'var(--el-color-warning)', 1: 'var(--el-color-primary)', 2: 'var(--el-color-success)' };
 		let fontColor = colorMap[row.importStatus];
 		return { color: fontColor };
 	}

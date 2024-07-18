@@ -18,6 +18,7 @@
 				:dialogConfig="state.tableData.dialogConfig"
 				@addData="addData"
 				:loadingBtn="loadingBtn"
+				@selectChange="onChangeBuild"
 				dialogWidth="50%"
 				:isFootBtn="isFootBtn"
 				@inputBlur="inputBlur"
@@ -84,6 +85,7 @@ import {
 } from '/@/api/basicInformation/lines';
 import { getStationQueryNoPageApi } from '/@/api/projectConfiguration/projectManage';
 import { getUploadFileApi } from '/@/api/global';
+import { getAreaQueryBuildingApi, getAreaQueryFloorApi } from '/@/api/basicInformation/area';
 // 引入组件
 const Table = defineAsyncComponent(() => import('/@/components/table/index.vue'));
 const TableSearch = defineAsyncComponent(() => import('/@/components/search/search.vue'));
@@ -162,6 +164,26 @@ const state = reactive<TableDemoState>({
 				md: 24,
 				lg: 24,
 				xl: 24,
+				isCheck: true,
+			},
+			{
+				label: 'message.pages.building',
+				prop: 'building',
+				placeholder: '',
+				required: true,
+				type: 'select',
+				standbyType: 'select',
+				options: [],
+				isCheck: true,
+			},
+			{
+				label: 'message.pages.floor',
+				prop: 'floor',
+				placeholder: '',
+				required: true,
+				type: 'select',
+				standbyType: 'select',
+				options: [],
 				isCheck: true,
 			},
 			// {
@@ -368,6 +390,7 @@ const openDialog = async (type: string, row: EmptyObjectType) => {
 	if (type === 'add') {
 		datas.data = [{ stationCode: '', machineNoList: [] }];
 	} else {
+		getFloorSelect(row.building);
 		const res = await getLineApi(row.linecode);
 		datas.data = res.data.stationMachineList;
 		let allCode: EmptyArrayType = [];
@@ -392,6 +415,13 @@ const putLineUpdateLine = async (editData: EmptyObjectType) => {
 	if (res.status) {
 		ElMessage.success(t(`message.hint.modifiedSuccess`));
 		getTableData();
+	}
+};
+// 改變樓棟得到樓層下拉
+const onChangeBuild = (val: string, prop: string, formData: EmptyObjectType) => {
+	if (prop === 'building') {
+		formData.floor = '';
+		getFloorSelect(formData.building);
 	}
 };
 // 輸入框失去焦點
@@ -465,7 +495,7 @@ const addData = async (ruleForm: EmptyObjectType, type: string) => {
 	lineDialogTableFormRef.value.validate(async (valid: boolean) => {
 		if (valid) {
 			loadingBtn.value = true;
-			const editData = { line: ruleForm.line, lineStationMachines: lineDialogState.tableData.data };
+			const editData = { ...ruleForm, lineStationMachines: lineDialogState.tableData.data };
 			if (lineDialogState.tableData.data.length <= 0) {
 				ElMessage.warning(t(`請添加站位`));
 				return;
@@ -618,10 +648,33 @@ const getStation = async () => {
 		}
 	});
 };
+// 樓棟下拉
+const getBuildingSelect = async () => {
+	const res = await getAreaQueryBuildingApi();
+	state.tableData.dialogConfig![1].options = res.data.map((item: any) => {
+		return {
+			value: item.building,
+			label: item.building,
+			text: item.building,
+		};
+	});
+};
+// 樓層下拉
+const getFloorSelect = async (build: string) => {
+	const res = await getAreaQueryFloorApi(build);
+	state.tableData.dialogConfig![2].options = res.data.map((item: any) => {
+		return {
+			value: item.floor,
+			label: item.floor,
+			text: item.floor,
+		};
+	});
+};
 // 页面加载时
 onMounted(async () => {
 	getTableData();
 	getStation();
+	getBuildingSelect();
 });
 </script>
 

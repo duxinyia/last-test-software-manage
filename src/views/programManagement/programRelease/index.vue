@@ -762,7 +762,7 @@ const openEditDialog = (formData: EmptyObjectType) => {
 	// 展示专案名称
 	formData.projectId = formData.projectName;
 	formData.stationName = formData.stationMachines.map((item: any) => {
-		return item.stationName + '/' + item.stationCode + '/' + item.machineType;
+		return item.stationName + '傻逼' + item.stationCode + '傻逼' + item.machineType;
 	});
 	// 调站位接口
 	getStationSelect(id);
@@ -866,7 +866,7 @@ const addData = async (ruleForm: EmptyObjectType, type: string) => {
 	// console.log(programFilePathfile[0]);
 
 	stationName = stationName.map((item: any) => {
-		return { stationName: item.split('/')[0], stationCode: item.split('/')[1], machineType: item.split('/')[2] };
+		return { stationName: item.split('傻逼')[0], stationCode: item.split('傻逼')[1], machineType: item.split('傻逼')[2] };
 	});
 	if (type === 'add') {
 		const getData = {
@@ -906,7 +906,7 @@ const addData = async (ruleForm: EmptyObjectType, type: string) => {
 			getTableData();
 		}
 	} else {
-		if (programFilePathfile.length > 0) {
+		if (programFilePathfile && programFilePathfile.length > 0) {
 			fileSize = Number((programFilePathfile[0]?.size / (1024 * 1024)).toFixed(2));
 		}
 		const editData = {
@@ -974,7 +974,7 @@ const getStationSelect = async (val: string) => {
 	const res = await getProjectQueryNopageProjectStationApi(val);
 	let options = res.data.map((item: any) => {
 		return {
-			value: item.stationname + '/' + item.stationcode + '/' + item.machinetypes,
+			value: item.stationname + '傻逼' + item.stationcode + '傻逼' + item.machinetypes,
 			label: item.stationcode,
 			text: `${t('message.pages.position')}：${item.stationname}，${t('message.pages.stationCode')}：${item.stationcode}，${t(
 				'message.pages.machineType'
